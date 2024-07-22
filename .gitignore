@@ -4,3 +4,6 @@ bin
 cmake*
 exp*
 debug
+debug*
+release*
+
