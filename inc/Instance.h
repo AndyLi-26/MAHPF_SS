@@ -3,7 +3,7 @@
 
 
 // Currently only works for undirected unweighted 4-nighbor grids
-class Instance 
+class Instance
 {
 public:
 	int num_of_cols;
@@ -13,14 +13,17 @@ public:
 	// enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
 
 	Instance()=default;
-	Instance(const string& map_fname, const string& agent_fname, 
-		int num_of_agents = 0, int num_of_rows = 0, int num_of_cols = 0, int num_of_obstacles = 0, int warehouse_width = 0);
+	Instance(const string& map_fname, const string& agent_fname,const string& human_fname,
+            int num_of_humans=0,int num_of_agents = 0,
+            int num_of_rows = 0, int num_of_cols = 0, int num_of_obstacles = 0, int warehouse_width = 0);
 
 
-	void printAgents() const;
+	void printAgents(AgentType type) const;
 	string getMapFile() const {return map_fname;};
-    vector<int> getStarts() const {return start_locations;};
-    vector<int> getGoals() const {return goal_locations;};
+    vector<int> getStarts(AgentType type) const {return type==AgentType::ROBOT?start_agent: start_human;};
+    vector<int> getGoals(AgentType type) const {return type==AgentType::ROBOT?goal_agent: goal_human;};
+    int getStart(AgentID id) const {return  id.type==AgentType::ROBOT?start_agent[id.id]:start_human[id.id];};
+    int getGoal(AgentID id) const {return  id.type==AgentType::ROBOT?goal_agent[id.id]:goal_human[id.id];};
 
 
     inline bool isObstacle(int loc) const { return my_map[loc]; }
@@ -70,23 +73,29 @@ public:
 		return degree;
 	}
 
-	int getDefaultNumberOfAgents() const { return num_of_agents; }
+	int getDefaultNumberOfAgents(AgentType type) const { return type==AgentType::ROBOT?num_of_agents:num_of_humans; }
 	string getInstanceName() const { return agent_fname; }
 private:
 	  // int moves_offset[MOVE_COUNT];
 	  vector<bool> my_map;
 	  string map_fname;
 	  string agent_fname;
+	  string human_fname;
 
 	  int num_of_agents;
-	  vector<int> start_locations;
-	  vector<int> goal_locations;
+	  vector<int> start_agent;
+	  vector<int> goal_agent;
+
+	  int num_of_humans;
+      vector<int> start_human;
+      vector<int> goal_human;
 
 	  bool loadMap();
 	  void printMap() const;
 	  void saveMap() const;
 
 	  bool loadAgents();
+	  bool loadHumans();
 	  void saveAgents() const;
 	  void saveNathan() const;
 
@@ -97,7 +106,7 @@ private:
 
 	  int randomWalk(int loc, int steps) const;
 
-	  // Class  SingleAgentSolver can access private members of Node 
+	  // Class  SingleAgentSolver can access private members of Node
 	  friend class SingleAgentSolver;
 };
 

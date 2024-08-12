@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Instance.h"
 #include "ConstraintTable.h"
+#include "common.h"
 
 class LLNode // low-level node
 {
@@ -82,6 +83,7 @@ public:
 	double runtime_build_CT = 0; // runtimr of building constraint table
 	double runtime_build_CAT = 0; // runtime of building conflict avoidance table
 
+    AgentID id;
 	int start_location;
 	int goal_location;
 	vector<int> my_heuristic;  // this is the precomputed heuristic for this agent
@@ -91,6 +93,7 @@ public:
 	}
 	const Instance& instance;
 
+    virtual Path findOptimalPath(const PathTable& path_table)=0;
 	virtual Path findOptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
 		const vector<Path*>& paths, int agent, int lower_bound) = 0;
 	virtual pair<Path, int> findSuboptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
@@ -101,13 +104,14 @@ public:
 	list<int> getNextLocations(int curr) const; // including itself and its neighbors
 	list<int> getNeighbors(int curr) const { return instance.getNeighbors(curr); }
 
-	// int getStartLocation() const {return instance.start_locations[agent]; }
-	// int getGoalLocation() const {return instance.goal_locations[agent]; }
+	// int getStartLocation() const {return instance.start_agent[agent]; }
+	// int getGoalLocation() const {return instance.goal_agent[agent]; }
 
-	SingleAgentSolver(const Instance& instance, int agent) :
-		instance(instance), //agent(agent), 
-		start_location(instance.start_locations[agent]),
-		goal_location(instance.goal_locations[agent])
+	SingleAgentSolver(const Instance& instance, AgentID id) :
+		instance(instance), //agent(agent),
+        id(id),
+		start_location(instance.getStart(id)),
+		goal_location(instance.getGoal(id))
 	{
 		compute_heuristics();
 	}

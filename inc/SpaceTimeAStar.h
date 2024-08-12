@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "SingleAgentSolver.h"
+#include "PathTable.h"
 
 
 class AStarNode: public LLNode
@@ -66,8 +67,8 @@ public:
 
 	string getName() const { return "AStar"; }
 
-	SpaceTimeAStar(const Instance& instance, int agent):
-		SingleAgentSolver(instance, agent) {}
+	SpaceTimeAStar(const Instance& instance, AgentID id):
+		SingleAgentSolver(instance, id) {}
 
 private:
 	// define typedefs and handles for heap

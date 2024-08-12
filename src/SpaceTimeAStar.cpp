@@ -5,7 +5,7 @@ void SpaceTimeAStar::updatePath(const LLNode* goal, vector<PathEntry> &path)
 {
 	path.reserve(goal->g_val + 1);
 	const LLNode* curr = goal;
-	while (curr != nullptr) 
+	while (curr != nullptr)
 	{
 		path.emplace_back(curr->location);
 		curr = curr->parent;
@@ -35,7 +35,7 @@ Path SpaceTimeAStar::findOptimalPath(const PathTable& path_table)
     if(!path_table.table.empty())
     {
         holding_time = path_table.table[goal_location].size();
-        while (holding_time > 0 && path_table.table[goal_location][holding_time - 1] == NO_AGENT)
+        while (holding_time > 0 && !path_table.table[goal_location][holding_time - 1])
             holding_time--;
     }
 
@@ -279,7 +279,7 @@ pair<Path, int> SpaceTimeAStar::findSuboptimalPath(const HLNode& node, const Con
 					if (add_to_focal)
 						existing_next->focal_handle = focal_list.push(existing_next);
 					if (update_in_focal)
-						focal_list.update(existing_next->focal_handle);  // should we do update? yes, because number of conflicts may go up or down			
+						focal_list.update(existing_next->focal_handle);  // should we do update? yes, because number of conflicts may go up or down
 				}
 			}
 
@@ -367,7 +367,7 @@ inline void SpaceTimeAStar::pushNode(AStarNode* node)
 	node->in_openlist = true;
 	num_generated++;
 	if (node->getFVal() <= w * min_f_val)
-		node->focal_handle = focal_list.push(node);		
+		node->focal_handle = focal_list.push(node);
 }
 
 

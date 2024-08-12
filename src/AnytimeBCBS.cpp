@@ -4,7 +4,7 @@
 
 void AnytimeBCBS::run()
 {
-    int num_of_agents = instance.getDefaultNumberOfAgents();
+    int num_of_agents = instance.getDefaultNumberOfAgents(AgentType::ROBOT);
     bool improvements = true;
     double w = (double) MAX_COST / (instance.num_of_cols + instance.num_of_rows)
             / 10 / num_of_agents; // a large enough w without integer overflow issue
@@ -42,7 +42,7 @@ void AnytimeBCBS::run()
             assert(sum_of_costs > bcbs.solution_cost);
             sum_of_costs = bcbs.solution_cost;
             best_goal_node = bcbs.getGoalNode();
-            iteration_stats.emplace_back(instance.getDefaultNumberOfAgents(), sum_of_costs,
+            iteration_stats.emplace_back(instance.getDefaultNumberOfAgents(AgentType::ROBOT), sum_of_costs,
                                          runtime, "BCBS", sum_of_costs_lowerbound);
         }
 
@@ -74,7 +74,7 @@ void AnytimeBCBS::validateSolution() const
 {
     if (solution.empty())
         return;
-    int N = instance.getDefaultNumberOfAgents();
+    int N = instance.getDefaultNumberOfAgents(AgentType::ROBOT);
     for (int i = 0; i < N; i++)
     {
         for (int j = i + 1; j < N; j++)

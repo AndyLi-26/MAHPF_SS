@@ -53,7 +53,7 @@ public:
 		bool operator()(const SIPPNode* n1, const SIPPNode* n2) const
 		{
 			return (n1 == n2) ||
-				(n1 && n2 && n1->location == n2->location && 
+				(n1 && n2 && n1->location == n2->location &&
 					n1->wait_at_goal == n2->wait_at_goal &&
 					get<0>(n1->interval) == get<0>(n2->interval)); //TODO: do we need to compare timestep here?
 		}
@@ -67,6 +67,9 @@ public:
 	// Returns a shortest path that satisfies the constraints of the give node  while
 	// minimizing the number of internal conflicts (that is conflicts with known_paths for other agents found so far).
 	// lowerbound is an underestimation of the length of the path in order to speed up the search.
+    Path findOptimalPath(const PathTable& path_table){
+        return Path();
+    };
 	Path findOptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
 		const vector<Path*>& paths, int agent, int lowerbound);
 	pair<Path, int> findSuboptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
@@ -76,8 +79,8 @@ public:
 
 	string getName() const { return "SIPP"; }
 
-	SIPP(const Instance& instance, int agent):
-		SingleAgentSolver(instance, agent) {}
+	SIPP(const Instance& instance, AgentID id):
+		SingleAgentSolver(instance, id) {}
 
 private:
 	// define typedefs and handles for heap
@@ -94,7 +97,7 @@ private:
 
 	void generateChild(const Interval& interval, SIPPNode* curr, int next_location,
 		const ReservationTable& reservation_table);
-	
+
 	// Updates the path datamember
 	void updatePath(const LLNode* goal, std::vector<PathEntry> &path);
 	inline SIPPNode* popNode();

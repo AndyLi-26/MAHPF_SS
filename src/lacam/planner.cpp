@@ -1,26 +1,26 @@
-#include "../include/planner.hpp"
+#include "../inc/lacam/planner.hpp"
 
-Constraint::Constraint() : who(std::vector<int>()), where(Vertices()), depth(0)
+lacamConstraint::lacamConstraint() : who(std::vector<int>()), where(Vertices()), depth(0)
 {
 }
 
-Constraint::Constraint(Constraint* parent, int i, Vertex* v)
+lacamConstraint::lacamConstraint(lacamConstraint* parent, int i, Vertex* v)
     : who(parent->who), where(parent->where), depth(parent->depth + 1)
 {
     who.push_back(i);
     where.push_back(v);
 }
 
-Constraint::~Constraint(){};
+lacamConstraint::~lacamConstraint(){};
 
 Node::Node(Config _C, DistTable& D, Node* _parent)
     : C(_C),
     parent(_parent),
     priorities(C.size(), 0),
     order(C.size(), 0),
-    search_tree(std::queue<Constraint*>())
+    search_tree(std::queue<lacamConstraint*>())
 {
-    search_tree.push(new Constraint());
+    search_tree.push(new lacamConstraint());
     const auto N = C.size();
 
     // set priorities
@@ -52,7 +52,7 @@ Node::~Node()
     }
 }
 
-Planner::Planner(const Instance* _ins, const Deadline* _deadline,
+Planner::Planner(const lacamInstance* _ins, const Deadline* _deadline,
         std::mt19937* _MT, int _verbose)
     : ins(_ins),
     deadline(_deadline),
@@ -74,12 +74,12 @@ Solution Planner::solve()
     info(1, verbose, "elapsed:", elapsed_ms(deadline), "ms\tstart search");
 
     // setup agents
-    for (auto i = 0; i < N; ++i) A[i] = new Agent(i);
+    for (auto i = 0; i < N; ++i) A[i] = new lacamAgent(i);
 
     // setup search queues
     std::stack<Node*> OPEN;
     std::unordered_map<Config, Node*, ConfigHasher> CLOSED;
-    std::vector<Constraint*> GC;  // garbage collection of constraints
+    std::vector<lacamConstraint*> GC;  // garbage collection of constraints
 
     // insert initial node
     auto S = new Node(ins->starts, D);
@@ -90,6 +90,7 @@ Solution Planner::solve()
     int loop_cnt = 0;
     std::vector<Config> solution;
 
+    std::cout<<"starting loop\n";
     while (!OPEN.empty() && !is_expired(deadline)) {
         loop_cnt += 1;
 
@@ -122,7 +123,7 @@ Solution Planner::solve()
             auto C = S->C[i]->neighbor;
             C.push_back(S->C[i]);
             if (MT != nullptr) std::shuffle(C.begin(), C.end(), *MT);  // randomize
-            for (auto u : C) S->search_tree.push(new Constraint(M, i, u));
+            for (auto u : C) S->search_tree.push(new lacamConstraint(M, i, u));
         }
 
         // create successors at the high-level search
@@ -157,7 +158,7 @@ Solution Planner::solve()
     return solution;
 }
 
-bool Planner::get_new_config(Node* S, Constraint* M)
+bool Planner::get_new_config(Node* S, lacamConstraint* M)
 {
     // setup cache
     for (auto a : A) {
@@ -201,7 +202,7 @@ bool Planner::get_new_config(Node* S, Constraint* M)
     return true;
 }
 
-bool Planner::funcPIBT(Agent* ai)
+bool Planner::funcPIBT(lacamAgent* ai)
 {
     const auto i = ai->id;
     const auto K = ai->v_now->neighbor.size();
@@ -253,7 +254,7 @@ bool Planner::funcPIBT(Agent* ai)
     return false;
 }
 
-Solution solve(const Instance& ins, const int verbose, const Deadline* deadline,
+Solution solve(const lacamInstance& ins, const int verbose, const Deadline* deadline,
         std::mt19937* MT)
 {
     info(1, verbose, "elapsed:", elapsed_ms(deadline), "ms\tpre-processing");

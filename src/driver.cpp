@@ -1,9 +1,10 @@
 ﻿#include <boost/program_options.hpp>
 #include <boost/tokenizer.hpp>
 #include "LNS.h"
+#include "MAHPF.h"
 #include "AnytimeBCBS.h"
 #include "AnytimeEECBS.h"
-#include "PIBT/pibt.h"
+//#include "PIBT/pibt.h"
 
 
 /* Main function */
@@ -18,7 +19,9 @@ int main(int argc, char** argv)
 		// params for the input instance and experiment settings
 		("map,m", po::value<string>()->required(), "input file for map")
 		("agents,a", po::value<string>()->required(), "input file for agents")
+		("humans,h", po::value<string>()->required(), "input file for humans")
 		("agentNum,k", po::value<int>()->default_value(0), "number of agents")
+		("humanNum", po::value<int>()->default_value(1), "number of human")
         ("output,o", po::value<string>(), "output file")
 		("cutoffTime,t", po::value<double>()->default_value(7200), "cutoff time (seconds)")
 		("screen,s", po::value<int>()->default_value(0),
@@ -31,8 +34,10 @@ int main(int argc, char** argv)
         // params for LNS
         ("neighborSize", po::value<int>()->default_value(5), "Size of the neighborhood")
         ("maxIterations", po::value<int>()->default_value(1000000), "maximum number of iterations")
-        ("initAlgo", po::value<string>()->default_value("EECBS"),
-                "MAPF algorithm for finding the initial solution (EECBS, PP, PPS, CBS, PIBT, winPIBT)")
+        ("initAlgo", po::value<string>()->default_value("OPTIMAL"),
+                "MAPF algorithm for finding the initial solution (OPTIMAL,Sub_OPTIMAL)")
+        ("mergeAlgo", po::value<string>()->default_value("MCP"),
+                "MAPF algorithm for finding the initial solution (MCP,LNS)")
         ("replanAlgo", po::value<string>()->default_value("PP"),
                 "MAPF algorithm for replanning (EECBS, CBS, PP)")
         ("destoryStrategy", po::value<string>()->default_value("Adaptive"),
@@ -50,20 +55,24 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+    /*
     PIBTPPS_option pipp_option;
     pipp_option.windowSize = vm["pibtWindow"].as<int>();
     pipp_option.winPIBTSoft = vm["winPibtSoftmode"].as<bool>();
-
+    */
     po::notify(vm);
 
 	srand((int)time(0));
 
-	Instance instance(vm["map"].as<string>(), vm["agents"].as<string>(),
-		vm["agentNum"].as<int>());
+	Instance instance(vm["map"].as<string>(), vm["agents"].as<string>(),vm["humans"].as<string>(),
+            vm["humanNum"].as<int>(),vm["agentNum"].as<int>());
     double time_limit = vm["cutoffTime"].as<double>();
     int screen = vm["screen"].as<int>();
 	srand(0);
+    MAHPF mahpf(instance, time_limit, vm["initAlgo"].as<string>(), vm["mergeAlgo"].as<string>(), screen);
 
+
+    /*
 	if (vm["solver"].as<string>() == "LNS")
     {
         LNS lns(instance, time_limit,
@@ -71,7 +80,8 @@ int main(int argc, char** argv)
                 vm["replanAlgo"].as<string>(),
                 vm["destoryStrategy"].as<string>(),
                 vm["neighborSize"].as<int>(),
-                vm["maxIterations"].as<int>(), screen, pipp_option);
+                vm["maxIterations"].as<int>(), screen//, pipp_option
+                );
         bool succ = lns.run();
         if (succ)
             lns.validateSolution();
@@ -106,6 +116,7 @@ int main(int argc, char** argv)
 	    cerr << "Solver " << vm["solver"].as<string>() << " does not exist!" << endl;
 	    exit(-1);
     }
+    */
 	return 0;
 
 }

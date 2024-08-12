@@ -35,16 +35,46 @@ using std::ofstream;
 using std::cerr;
 using std::string;
 
-// #define NDEBUG 
+
+// #define NDEBUG
 
 #define MAX_TIMESTEP INT_MAX / 2
 #define MAX_COST INT_MAX / 2
 #define MAX_NODES INT_MAX / 2
 
+
+enum AgentType
+{
+    HUMAN,
+    ROBOT,
+    NONE
+};
+
 struct PathEntry
 {
 	int location = -1;
 	PathEntry(int loc = -1) { location = loc; }
+};
+
+struct AgentID
+{
+    int id;
+    AgentType type;
+    AgentID(int id, AgentType type) : id(id), type(type) {}
+    bool operator==(const AgentID& other) const
+    {
+        return id == other.id && type == other.type;
+    }
+    bool operator!=(const AgentID& other) const
+    {
+        return !(*this == other);
+    }
+
+    operator bool() const
+    {
+        return id != -1 && type != NONE;
+    }
+
 };
 
 typedef vector<PathEntry> Path;
@@ -69,7 +99,6 @@ struct PIBTPPS_option{
     bool winPIBTSoft ;
     int timestepLimit ;
 };
-
 
 // Only for three-tuples of std::hash-able types for simplicity.
 // You can of course template this struct to allow other hash functions

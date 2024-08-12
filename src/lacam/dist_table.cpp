@@ -1,18 +1,18 @@
-#include "../include/dist_table.hpp"
+#include "../inc/lacam/dist_table.hpp"
 
-DistTable::DistTable(const Instance& ins)
+DistTable::DistTable(const lacamInstance& ins)
     : K(ins.G.V.size()), table(ins.N, std::vector<int>(K, K))
 {
   setup(&ins);
 }
 
-DistTable::DistTable(const Instance* ins)
+DistTable::DistTable(const lacamInstance* ins)
     : K(ins->G.V.size()), table(ins->N, std::vector<int>(K, K))
 {
   setup(ins);
 }
 
-void DistTable::setup(const Instance* ins)
+void DistTable::setup(const lacamInstance* ins)
 {
   for (size_t i = 0; i < ins->N; ++i) {
     OPEN.push_back(std::queue<Vertex*>());

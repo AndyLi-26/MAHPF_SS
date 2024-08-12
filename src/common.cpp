@@ -2,10 +2,11 @@
 
 std::ostream& operator<<(std::ostream& os, const Path& path)
 {
-	for (const auto& state : path)
-	{
-		os << state.location; // << "(" << state.is_single() << "),";
-	}
+    os<<"[";
+    for (const PathEntry& entry : path) {
+        os<<entry.location<<", ";
+    }
+    os<<"]"<<endl;
 	return os;
 }
 

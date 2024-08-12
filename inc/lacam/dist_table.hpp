@@ -16,8 +16,8 @@ struct DistTable {
   int get(int i, int v_id);   // agent, vertex-id
   int get(int i, Vertex* v);  // agent, vertex
 
-  DistTable(const Instance& ins);
-  DistTable(const Instance* ins);
+  DistTable(const lacamInstance& ins);
+  DistTable(const lacamInstance* ins);
 
-  void setup(const Instance* ins);  // initialization
+  void setup(const lacamInstance* ins);  // initialization
 };

@@ -77,7 +77,7 @@ bool ConstraintTable::constrained(size_t loc, int t) const
 		const auto& it = landmarks.find(t);
 		if (it != landmarks.end() && it->second != loc)
 			return true;  // violate the positive vertex constraint
-	}	
+	}
 
 	const auto& it = ct.find(loc);
 	if (it == ct.end())
@@ -110,7 +110,7 @@ void ConstraintTable::copy(const ConstraintTable& other)
 	// we do not copy cat
 }
 
-// build the constraint table for the given agent at the give node 
+// build the constraint table for the given agent at the give node
 void ConstraintTable::build(const HLNode& node, int agent)
 {
 	auto curr = &node;
@@ -135,7 +135,7 @@ void ConstraintTable::build(const HLNode& node, int agent)
 				break;
 			case constraint_type::POSITIVE_VERTEX:
 				assert(curr->constraints.size() == 1);
-				if (agent == a) // this agent has to be at x at timestep t 
+				if (agent == a) // this agent has to be at x at timestep t
 				{
 					insertLandmark(x, t);
 				}
@@ -251,7 +251,7 @@ int ConstraintTable::getHoldingTime() const
         (int) path_table.table[goal_location].size() > length_min)
     {
         rst = (int) path_table.table[goal_location].size();
-        while (rst > length_min && path_table.table[goal_location][rst - 1] == NO_AGENT)
+        while (rst > length_min && !path_table.table[goal_location][rst - 1])
             rst--;
     }
 

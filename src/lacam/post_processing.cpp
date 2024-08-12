@@ -1,8 +1,8 @@
-#include "../include/post_processing.hpp"
+#include "../inc/lacam/post_processing.hpp"
 
-#include "../include/dist_table.hpp"
+#include "../inc/lacam/dist_table.hpp"
 
-bool is_feasible_solution(const Instance& ins, const Solution& solution,
+bool is_feasible_solution(const lacamInstance& ins, const Solution& solution,
                           const int verbose)
 {
   if (solution.empty()) return true;
@@ -91,7 +91,7 @@ int get_sum_of_loss(const Solution& solution)
   return c;
 }
 
-int get_makespan_lower_bound(const Instance& ins, DistTable& dist_table)
+int get_makespan_lower_bound(const lacamInstance& ins, DistTable& dist_table)
 {
   int c = 0;
   for (size_t i = 0; i < ins.N; ++i) {
@@ -100,7 +100,7 @@ int get_makespan_lower_bound(const Instance& ins, DistTable& dist_table)
   return c;
 }
 
-int get_sum_of_costs_lower_bound(const Instance& ins, DistTable& dist_table)
+int get_sum_of_costs_lower_bound(const lacamInstance& ins, DistTable& dist_table)
 {
   int c = 0;
   for (size_t i = 0; i < ins.N; ++i) {
@@ -109,7 +109,7 @@ int get_sum_of_costs_lower_bound(const Instance& ins, DistTable& dist_table)
   return c;
 }
 
-void print_stats(const int verbose, const Instance& ins,
+void print_stats(const int verbose, const lacamInstance& ins,
                  const Solution& solution, const double comp_time_ms)
 {
   auto ceil = [](float x) { return std::ceil(x * 100) / 100; };
@@ -130,7 +130,7 @@ void print_stats(const int verbose, const Instance& ins,
 // for log of map_name
 static const std::regex r_map_name = std::regex(R"(.+/(.+))");
 
-void make_log(const Instance& ins, const Solution& solution,
+void make_log(const lacamInstance& ins, const Solution& solution,
               const std::string& output_name, const double comp_time_ms,
               const std::string& map_name, const int seed, const bool log_short)
 {

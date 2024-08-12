@@ -9,13 +9,13 @@
 #include "utils.hpp"
 
 // low-level search node
-struct Constraint {
+struct lacamConstraint {
   std::vector<int> who;
   Vertices where;
   const int depth;
-  Constraint();
-  Constraint(Constraint* parent, int i, Vertex* v);  // who and where
-  ~Constraint();
+  lacamConstraint();
+  lacamConstraint(lacamConstraint* parent, int i, Vertex* v);  // who and where
+  ~lacamConstraint();
 };
 
 // high-level search node
@@ -26,7 +26,7 @@ struct Node {
   // for low-level search
   std::vector<float> priorities;
   std::vector<int> order;
-  std::queue<Constraint*> search_tree;
+  std::queue<lacamConstraint*> search_tree;
 
   Node(Config _C, DistTable& D, Node* _parent = nullptr);
   ~Node();
@@ -34,19 +34,19 @@ struct Node {
 using Nodes = std::vector<Node*>;
 
 // PIBT agent
-struct Agent {
+struct lacamAgent {
   const int id;
   Vertex* v_now;   // current location
   Vertex* v_next;  // next location
-  Agent(int _id) : id(_id), v_now(nullptr), v_next(nullptr) {}
+  lacamAgent(int _id) : id(_id), v_now(nullptr), v_next(nullptr) {}
 };
-using Agents = std::vector<Agent*>;
+using Agents = std::vector<lacamAgent*>;
 
 // next location candidates, for saving memory allocation
 using Candidates = std::vector<std::array<Vertex*, 5> >;
 
 struct Planner {
-  const Instance* ins;
+  const lacamInstance* ins;
   const Deadline* deadline;
   std::mt19937* MT;
   const int verbose;
@@ -61,13 +61,13 @@ struct Planner {
   Agents occupied_now;   // for quick collision checking
   Agents occupied_next;  // for quick collision checking
 
-  Planner(const Instance* _ins, const Deadline* _deadline, std::mt19937* _MT,
+  Planner(const lacamInstance* _ins, const Deadline* _deadline, std::mt19937* _MT,
           int _verbose = 0);
   Solution solve();
-  bool get_new_config(Node* S, Constraint* M);
-  bool funcPIBT(Agent* ai);
+  bool get_new_config(Node* S, lacamConstraint* M);
+  bool funcPIBT(lacamAgent* ai);
 };
 
 // main function
-Solution solve(const Instance& ins, const int verbose = 0,
+Solution solve(const lacamInstance& ins, const int verbose = 0,
                const Deadline* deadline = nullptr, std::mt19937* MT = nullptr);

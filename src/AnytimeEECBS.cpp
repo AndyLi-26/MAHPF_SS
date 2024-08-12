@@ -4,7 +4,7 @@
 
 void AnytimeEECBS::run()
 {
-    int num_of_agents = instance.getDefaultNumberOfAgents();
+    int num_of_agents = instance.getDefaultNumberOfAgents(AgentType::ROBOT);
     bool improvements = true;
     ECBS ecbs(instance, false, screen);
     ecbs.setPrioritizeConflicts(true);
@@ -47,7 +47,7 @@ void AnytimeEECBS::run()
             // w = max(1.0, 0.99 * sum_of_costs / sum_of_costs_lowerbound);
             // a better way of computing w should be
             w = 1 + 0.99 * (sum_of_costs * 1.0 / sum_of_costs_lowerbound - 1);
-            iteration_stats.emplace_back(instance.getDefaultNumberOfAgents(), sum_of_costs,
+            iteration_stats.emplace_back(instance.getDefaultNumberOfAgents(AgentType::ROBOT), sum_of_costs,
                                          runtime, "EECBS("+ std::to_string(w) + ")", sum_of_costs_lowerbound);
         }
 
@@ -71,7 +71,7 @@ void AnytimeEECBS::validateSolution() const
 {
     if (solution.empty())
         return;
-    int N = instance.getDefaultNumberOfAgents();
+    int N = instance.getDefaultNumberOfAgents(AgentType::ROBOT);
     for (int i = 0; i < N; i++)
     {
         for (int j = i + 1; j < N; j++)
