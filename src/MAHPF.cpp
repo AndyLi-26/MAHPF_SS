@@ -1,5 +1,4 @@
 #include "MAHPF.h"
-
 MAHPF::MAHPF(const Instance& instance, double time_limit,
                 string init_algo_name, string merge_algo, int screen):
     instance(instance), time_limit(time_limit),
@@ -14,12 +13,15 @@ MAHPF::MAHPF(const Instance& instance, double time_limit,
     humans.reserve(M);
     for (int i = 0; i < M; i++)
         humans.emplace_back(instance, AgentID(i,AgentType::HUMAN));
-    getInitialSolution();
 }
 
 bool MAHPF::getInitialSolution() {
+    cout<<"seraching for initial solution"<<endl;
     if (init_algo_name == "OPTIMAL") {
         runHuman();
+        cout<<"path after return"<<endl;
+        cout<<humans[0].path<<endl;
+
         runCBS();
     } else if (init_algo_name == "Sub-OPTIMAL") {
         // to be implemented
@@ -31,29 +33,61 @@ bool MAHPF::getInitialSolution() {
 
 bool MAHPF::merge()
 {
+    list<AgentID> confAgents;
+    checkConflict(confAgents);
+    if (confAgents.empty())
+    {
+        cout<<"no conflict already, no need to merge"<<endl;
+        return true;
+    }
     if (merge_algo == "OPTIMAL") {
         // to be implemented
     } else if (merge_algo == "Sub-OPTIMAL") {
         // to be implemented
     } else if (merge_algo == "MCP") {
-        mergeMCP();
+        printPaths(1);
+        cout<<humans[0].path<<endl;
+        cout<<"start merging with MCP"<<endl;
+        return mergeSuperMCP();
+
         // to be implemented
+    }
+}
+
+bool MAHPF::mergeSubOPTIMAL()
+{
+    mergePP();
+}
+
+bool MAHPF::mergePP()
+{
+    Path p=humans[0].path_planner->findOptimalPath(path_table);
+    if (!p.empty())
+    {
+        humans[0].path=p;
+        return true;
+    }
+    high_resolution_clock::time_point start_time=Time::now();
+    double run_time=0;
+    while (run_time<time_limit)
+    {
+        list<AgentID> failedAgents;
+        run_time = ((fsec)(Time::now() - start_time)).count();
     }
 }
 
 bool MAHPF::runHuman()
 {
-    for (Agent h : humans)
+    for (int h=0;h<humans.size();h++)
     {
-        Path p=h.path_planner->findOptimalPath(path_table);
+        Path p=humans[h].path_planner->findOptimalPath(path_table);
         if (p.empty())
         {
-            cout << "No path found for human:"<<h.id << endl;
+            cout << "No path found for human:"<<humans[h].id << endl;
             return false;
         }
-        cout<<p<<endl;
+        humans[h].path=p;
     }
-    //path_table.insertPath(-1, p);
     return true;
 }
 
@@ -69,7 +103,6 @@ bool MAHPF::runCBS()
     }
 
     CBS cbs(search_engines, path_table, screen - 1);
-    cout<<"cbs inited"<<endl;
     cbs.setPrioritizeConflicts(true);
     cbs.setDisjointSplitting(false);
     cbs.setBypass(true);
@@ -83,7 +116,6 @@ bool MAHPF::runCBS()
     cbs.setSavingStats(false);
     cbs.setHighLevelSolver(high_level_solver_type::ASTAR, 1);
     bool succ = cbs.solve(60, 0);
-    instance.printAgents(AgentType::ROBOT);
 
     if (succ)
     {
@@ -99,7 +131,92 @@ bool MAHPF::runCBS()
     return succ;
 }
 
-bool MAHPF::mergeMCP()
+void MAHPF::checkConflict(list<AgentID> confAgents)
 {
-    // to be implemented
+    for (Agent h : humans)
+    {
+        for (int t=0;t<h.path.size();t++)
+        {
+            AgentID confAgent=intersect(t,h.path[t].location);
+            if (confAgent)
+                confAgents.push_back(confAgent);
+        }
+    }
+}
+
+bool MAHPF::mergeSuperMCP()
+{
+    for (Agent h : humans)
+    {
+        for (int t=0;t<h.path.size();t++)
+        {
+            //cout<<"t:"<<t<<endl;
+            while (1)
+            {
+                if(intersect(t,h.path[t].location))
+                {
+                    if(!delayRobots(t)) return false;
+                }
+                else
+                {
+                    break;
+                }
+
+            }
+        }
+    }
+    return true;
+}
+AgentID MAHPF::intersect(int t, int loc){
+    for (Agent R: agents)
+    {
+        if (t<R.path.size() && R.path[t].location==loc)
+        {
+            //cout<<"id: "<<R.id.id<<endl;
+            return R.id;
+        }
+    }
+    return {-1,AgentType::NONE};
+}
+
+bool MAHPF::delayRobots(int t)
+{
+    cout<<"interference detected"<<endl;
+    for (Agent R: agents)
+    {
+        if (R.path.size()==1000) return false;
+        R.path.resize(R.path.size()+1);
+        for (int i=R.path.size()-1;i>t-1;i--)
+        {
+            R.path[i]=R.path[i-1];
+        }
+
+    }
+}
+
+
+void MAHPF::printPaths(bool only_conf)
+{
+    for (int t=0;t<humans[0].path.size();t++)
+    {
+        bool prted=false;
+        if (!only_conf)
+            cout<<"t: "<<t<<endl;
+        for (Agent R: agents)
+        {
+            if (R.path.size()>t)
+                if (R.path[t].location==humans[0].path[t].location)
+                {
+                    if (!prted)
+                    {
+                        cout<<"t: "<<t<<endl;
+                        prted=true;
+                    }
+                    cout<<"["<<R.id.id<<","<<R.path[t].location<<"]  ";
+                }
+                else if(!only_conf)
+                    cout<<"("<<R.id.id<<","<<R.path[t].location<<")  ";
+        }
+        cout<<endl;
+    }
 }

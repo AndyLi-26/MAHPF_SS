@@ -1,10 +1,10 @@
-#include "SpaceTimeAStar.h"
+#include "HumanSingle.h"
 
 
-void SpaceTimeAStar::updatePath(const LLNode* goal, vector<PathEntry> &path)
+void HumanSingle::updatePath(const HumanNode* goal, vector<PathEntry> &path)
 {
 	path.reserve(goal->g_val + 1);
-	const LLNode* curr = goal;
+	const HumanNode* curr = goal;
 	while (curr != nullptr)
 	{
 		path.emplace_back(curr->location);
@@ -14,7 +14,7 @@ void SpaceTimeAStar::updatePath(const LLNode* goal, vector<PathEntry> &path)
 }
 
 
-Path SpaceTimeAStar::findOptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
+Path HumanSingle::findOptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
 	const vector<Path*>& paths, int agent, int lowerbound)
 {
 	return findSuboptimalPath(node, initial_constraints, paths, agent, lowerbound, 1).first;
@@ -22,7 +22,7 @@ Path SpaceTimeAStar::findOptimalPath(const HLNode& node, const ConstraintTable& 
 
 // find path by time-space A* search
 // Returns a shortest path that does not collide with paths in the path table
-Path SpaceTimeAStar::findOptimalPath(const PathTable& path_table)
+Path HumanSingle::findOptimalPath(const PathTable& path_table)
 {
     Path path;
     num_expanded = 0;
@@ -148,8 +148,7 @@ Path SpaceTimeAStar::findOptimalPath(const PathTable& path_table)
     return path;
 }
 
-/*
-Path SpaceTimeAStar::findLeastCollisionPath(const PathTable& path_table)
+Path HumanSingle::findLeastCollisionPath(const PathTable& path_table)
 {
     Path path;
     num_expanded = 0;
@@ -173,14 +172,14 @@ Path SpaceTimeAStar::findLeastCollisionPath(const PathTable& path_table)
             max(lowerbound, my_heuristic[start_location]), nullptr, 0, 0, false);
 
     num_generated++;
-    start->open_handle = open_list_lstConf.push(start);
+    start->open_handle = open_list.push(start);
     start->focal_handle = focal_list.push(start);
     start->in_openlist = true;
     allNodes_table.insert(start);
     min_f_val = (int) start->getFVal();
     // lower_bound = int(w * min_f_val));
 
-    while (!open_list_lstConf.empty())
+    while (!open_list.empty())
     {
         updateFocalList(); // update FOCAL if min f-val increased
         auto* curr = popNode();
@@ -196,11 +195,9 @@ Path SpaceTimeAStar::findLeastCollisionPath(const PathTable& path_table)
 
         auto next_locations = instance.getNeighbors(curr->location);
         next_locations.emplace_back(curr->location);
-
         for (int next_location : next_locations)
         {
             int next_timestep = curr->timestep + 1;
-            int next_conflicts = curr->conflicts;
             if (path_table.makespan < next_timestep)
             { // now everything is static, so switch to space A* where we always use the same timestep
                 if (next_location == curr->location)
@@ -211,7 +208,7 @@ Path SpaceTimeAStar::findLeastCollisionPath(const PathTable& path_table)
             }
 
             if (path_table.constrained(curr->location, next_location, next_timestep))
-                next_conflicts++;
+                continue;
 
             // compute cost to next_id via curr node
             int next_g_val = curr->g_val + 1;
@@ -219,7 +216,7 @@ Path SpaceTimeAStar::findLeastCollisionPath(const PathTable& path_table)
 
             // generate (maybe temporary) node
             auto next = new AStarNode(next_location, next_g_val, next_h_val,
-                                      curr, next_timestep, next_conflicts, false);
+                                      curr, next_timestep, 0, false);
             if (next_location == goal_location && curr->location == goal_location)
                 next->wait_at_goal = true;
 
@@ -227,32 +224,45 @@ Path SpaceTimeAStar::findLeastCollisionPath(const PathTable& path_table)
             auto it = allNodes_table.find(next);
             if (it == allNodes_table.end())
             {
-                pushNode_conf(next);
+                pushNode(next);
                 allNodes_table.insert(next);
                 continue;
             }
             // update existing node's if needed (only in the open_list)
 
             auto existing_next = *it;
-            if (existing_next->num_of_conflicts > next->num_of_conflicts ||
-                (existing_next->num_of_conflicts == next->num_of_conflicts &&
-                existing_next->getFVal() > next->getFVal()))
+            if (existing_next->getFVal() > next->getFVal() || // if f-val decreased through this new path
+                (existing_next->getFVal() == next->getFVal() &&
+                 existing_next->num_of_conflicts > next->num_of_conflicts)) // or it remains the same but there's fewer conflicts
             {
                 if (!existing_next->in_openlist) // if its in the closed list (reopen)
                 {
                     existing_next->copy(*next);
-                    pushNode_conf(existing_next);
+                    pushNode(existing_next);
                 }
                 else
                 {
+                    bool add_to_focal = false;  // check if it was above the focal bound before and now below (thus need to be inserted)
+                    bool update_in_focal = false;  // check if it was inside the focal and needs to be updated (because f-val changed)
                     bool update_open = false;
-                    if (existing_next->num_of_conflicts > next->num_of_conflicts)
+                    if ((next_g_val + next_h_val) <= w * min_f_val)
+                    {  // if the new f-val qualify to be in FOCAL
+                        if (existing_next->getFVal() > w * min_f_val)
+                            add_to_focal = true;  // and the previous f-val did not qualify to be in FOCAL then add
+                        else
+                            update_in_focal = true;  // and the previous f-val did qualify to be in FOCAL then update
+                    }
+                    if (existing_next->getFVal() > next_g_val + next_h_val)
                         update_open = true;
 
                     existing_next->copy(*next);	// update existing node
 
                     if (update_open)
-                        open_list_conf.increase(existing_next->open_handle);  // increase because f-val improved
+                        open_list.increase(existing_next->open_handle);  // increase because f-val improved
+                    if (add_to_focal)
+                        existing_next->focal_handle = focal_list.push(existing_next);
+                    if (update_in_focal)
+                        focal_list.update(existing_next->focal_handle);  // should we do update? yes, because number of conflicts may go up or down
                 }
             }
 
@@ -263,12 +273,12 @@ Path SpaceTimeAStar::findLeastCollisionPath(const PathTable& path_table)
     releaseNodes();
     return path;
 }
-*/
+
 // find path by time-space A* search
 // Returns a bounded-suboptimal path that satisfies the constraints of the give node  while
 // minimizing the number of internal conflicts (that is conflicts with known_paths for other agents found so far).
 // lowerbound is an underestimation of the length of the path in order to speed up the search.
-pair<Path, int> SpaceTimeAStar::findSuboptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
+pair<Path, int> HumanSingle::findSuboptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
 	const vector<Path*>& paths, int agent, int lowerbound, double w)
 {
 	this->w = w;
@@ -408,7 +418,7 @@ pair<Path, int> SpaceTimeAStar::findSuboptimalPath(const HLNode& node, const Con
 }
 
 
-int SpaceTimeAStar::getTravelTime(int start, int end, const ConstraintTable& constraint_table, int upper_bound)
+int HumanSingle::getTravelTime(int start, int end, const ConstraintTable& constraint_table, int upper_bound)
 {
 	int length = MAX_TIMESTEP;
 	auto root = new AStarNode(start, 0, compute_heuristic(start, end), nullptr, 0);
@@ -467,7 +477,7 @@ int SpaceTimeAStar::getTravelTime(int start, int end, const ConstraintTable& con
 	return length;
 }
 
-inline AStarNode* SpaceTimeAStar::popNode()
+inline AStarNode* HumanSingle::popNode()
 {
 	auto node = focal_list.top(); focal_list.pop();
 	open_list.erase(node->open_handle);
@@ -477,17 +487,17 @@ inline AStarNode* SpaceTimeAStar::popNode()
 }
 
 
-inline void SpaceTimeAStar::pushNode(AStarNode* node)
+inline void HumanSingle::pushNode(AStarNode* node)
 {
 	node->open_handle = open_list.push(node);
 	node->in_openlist = true;
 	num_generated++;
-	//if (node->getFVal() <= w * min_f_val)
-	//	node->focal_handle = focal_list.push(node);
+	if (node->getFVal() <= w * min_f_val)
+		node->focal_handle = focal_list.push(node);
 }
 
-/*
-void SpaceTimeAStar::updateFocalList()
+
+void HumanSingle::updateFocalList()
 {
 	auto open_head = open_list.top();
 	if (open_head->getFVal() > min_f_val)
@@ -500,13 +510,13 @@ void SpaceTimeAStar::updateFocalList()
 		}
 		min_f_val = new_min_f_val;
 	}
-}*/
+}
 
 
-void SpaceTimeAStar::releaseNodes()
+void HumanSingle::releaseNodes()
 {
-	dis_open_list.clear();
-	conf_open_list.clear();
+	open_list.clear();
+	focal_list.clear();
 	for (auto node: allNodes_table)
 		delete node;
 	allNodes_table.clear();

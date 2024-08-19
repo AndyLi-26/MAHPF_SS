@@ -53,7 +53,6 @@ public:
 		}
 	};  // used by FOCAL (heap) to compare nodes (top of the heap has min number-of-conflicts)
 
-
 	LLNode() : location(0), g_val(0), h_val(0), parent(nullptr), timestep(0), num_of_conflicts(0), in_openlist(false), wait_at_goal(false) {}
 
 	LLNode(int location, int g_val, int h_val, LLNode* parent, int timestep, int num_of_conflicts = 0, bool in_openlist = false) :

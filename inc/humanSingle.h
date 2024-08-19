@@ -3,28 +3,28 @@
 #include "PathTable.h"
 
 
-class AStarNode: public LLNode
+class HumanNode: public LLNode
 {
 public:
 	// define a typedefs for handles to the heaps (allow up to quickly update a node in the heap)
-	typedef pairing_heap< AStarNode*, compare<LLNode::compare_node> >::handle_type open_handle_t;
-	typedef pairing_heap< AStarNode*, compare<LLNode::secondary_compare_node> >::handle_type focal_handle_t;
-	open_handle_t open_handle;
-	focal_handle_t focal_handle;
+	typedef pairing_heap< HumanNode*, compare<LLNode::compare_node> >::handle_type dis_open_handle_t;
+	typedef pairing_heap< HumanNode*, compare<LLNode::secondary_compare_node> >::handle_type conf_open_handle_t;
+	dis_open_handle_t dis_open_handle;
+	conf_open_handle_t conf_open_handle;
 
 
-	AStarNode() : LLNode() {}
+	HumanNode() : LLNode() {}
 
-	AStarNode(int loc, int g_val, int h_val, LLNode* parent, int timestep, int num_of_conflicts = 0, bool in_openlist = false) :
-		LLNode(loc, g_val, h_val, parent, timestep, num_of_conflicts, in_openlist) {}
+	HumanNode(int loc, int g_val, int h_val, LLNode* parent, int timestep, int num_of_conflicts = 0, bool in_openlist = false) :
+		LLNode(loc, g_val, h_val, parent, timestep, num_of_conflicts, in_openlist), {}
 
 
-	~AStarNode() {}
+	~HumanNode() {}
 
 	// The following is used by for generating the hash value of a nodes
 	struct NodeHasher
 	{
-		size_t operator()(const AStarNode* n) const
+		size_t operator()(const HumanNode* n) const
 		{
 			size_t loc_hash = std::hash<int>()(n->location);
 			size_t timestep_hash = std::hash<int>()(n->timestep);
@@ -37,7 +37,7 @@ public:
 	// both are non-NULL and agree on the id and timestep
 	struct eqnode
 	{
-		bool operator()(const AStarNode* s1, const AStarNode* s2) const
+		bool operator()(const HumanNode* s1, const HumanNode* s2) const
 		{
 			return (s1 == s2) || (s1 && s2 &&
                         s1->location == s2->location &&
@@ -45,22 +45,23 @@ public:
 						s1->wait_at_goal == s2->wait_at_goal);
 		}
 	};
+
 };
 
 
-class SpaceTimeAStar: public SingleAgentSolver
+class HumanSingle: public SingleAgentSolver
 {
 public:
     // find path by time-space A* search
     // Returns a shortest path that does not collide with paths in the path table
     Path findOptimalPath(const PathTable& path_table);
+    Path findLeastCollisionPath(const PathTable& path_table)
 	// find path by time-space A* search
 	// Returns a shortest path that satisfies the constraints of the give node  while
 	// minimizing the number of internal conflicts (that is conflicts with known_paths for other agents found so far).
 	// lowerbound is an underestimation of the length of the path in order to speed up the search.
 	Path findOptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
 						const vector<Path*>& paths, int agent, int lower_bound);
-
 	pair<Path, int> findSuboptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
 		const vector<Path*>& paths, int agent, int lowerbound, double w);  // return the path and the lowerbound
 
@@ -68,25 +69,25 @@ public:
 
 	string getName() const { return "AStar"; }
 
-	SpaceTimeAStar(const Instance& instance, AgentID id):
+	HumanSingle(const Instance& instance, AgentID id):
 		SingleAgentSolver(instance, id) {}
 
 private:
 	// define typedefs and handles for heap
-	typedef pairing_heap< AStarNode*, compare<AStarNode::compare_node> > heap_open_t;
-	typedef pairing_heap< AStarNode*, compare<AStarNode::secondary_compare_node> > heap_focal_t;
-	heap_open_t open_list;
-	heap_focal_t focal_list;
+	typedef pairing_heap< HumanNode*, compare<HumanNode::compare_node> > dis_open_t;
+	typedef pairing_heap< HumanNode*, compare<HumanNode::secondary_compare_node> > conf_open_t;
+	dis_open_t dis_open_list;
+	conf_open_t conf_open_t;
 
 	// define typedef for hash_map
-	typedef unordered_set<AStarNode*, AStarNode::NodeHasher, AStarNode::eqnode> hashtable_t;
+	typedef unordered_set<HumanNode*, HumanNode::NodeHasher, HumanNode::eqnode> hashtable_t;
 	hashtable_t allNodes_table;
 
 	// Updates the path datamember
 	void updatePath(const LLNode* goal, vector<PathEntry> &path);
 	void updateFocalList();
-	inline AStarNode* popNode();
-	inline void pushNode(AStarNode* node);
+	inline HumanNode* popNode();
+	inline void pushNode(HumanNode* node);
 	void releaseNodes();
 
 };

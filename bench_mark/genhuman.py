@@ -17,11 +17,9 @@ def read_map(fn):
 root= os.getcwd()
 for mf in [item for item in os.listdir(root) if os.path.isdir(os.path.join(root, item))]:
     h,w,m=read_map(os.path.join(mf, mf+".map"))
-    starts=getStarts(h,w)
-    [print(m[i[0]][i[1]],end=" ") for i in starts]
-    goals=getGoals(h,w,m)
-    [print(m[i[0]][i[1]],end=" ") for i in goals]
-    with open(os.path.join(mf,"scen","human","scen.scen"), "w") as f:
-        print("version 1", file=f)
-        [print(*[-1,mf+".map",w,h,*starts[i][::-1],*goals[i][::-1],-1], file=f, sep="\t") for i in range(N)]
-
+    for i in range(25):
+        starts=getStarts(h,w)
+        goals=getGoals(h,w,m)
+        with open(os.path.join(mf,"scen","human",f"scen-{i}.scen"), "w") as f:
+            print("version 1", file=f)
+            [print(*[-1,mf+".map",w,h,*starts[i][::-1],*goals[i][::-1],-1], file=f, sep="\t") for i in range(N)]

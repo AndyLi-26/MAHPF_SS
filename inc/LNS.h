@@ -37,7 +37,6 @@ struct Agent
     }
 
     int getNumOfDelays() const { return (int) path.size() - 1 - path_planner->my_heuristic[path_planner->start_location]; }
-    ~Agent() { delete path_planner; }
 
 };
 

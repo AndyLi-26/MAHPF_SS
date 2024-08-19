@@ -70,6 +70,11 @@ int main(int argc, char** argv)
     int screen = vm["screen"].as<int>();
 	srand(0);
     MAHPF mahpf(instance, time_limit, vm["initAlgo"].as<string>(), vm["mergeAlgo"].as<string>(), screen);
+    if (mahpf.getInitialSolution())
+        mahpf.merge();
+    else {
+        cout<<"no initial solution found"<<endl;
+    }
 
 
     /*
@@ -118,5 +123,4 @@ int main(int argc, char** argv)
     }
     */
 	return 0;
-
 }
