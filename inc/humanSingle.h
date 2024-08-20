@@ -11,12 +11,13 @@ public:
 	typedef pairing_heap< HumanNode*, compare<LLNode::secondary_compare_node> >::handle_type conf_open_handle_t;
 	dis_open_handle_t dis_open_handle;
 	conf_open_handle_t conf_open_handle;
+	conf_open_handle_t dis_focal_handle;
 
 
 	HumanNode() : LLNode() {}
 
 	HumanNode(int loc, int g_val, int h_val, LLNode* parent, int timestep, int num_of_conflicts = 0, bool in_openlist = false) :
-		LLNode(loc, g_val, h_val, parent, timestep, num_of_conflicts, in_openlist), {}
+		LLNode(loc, g_val, h_val, parent, timestep, num_of_conflicts, in_openlist) {}
 
 
 	~HumanNode() {}
@@ -34,7 +35,7 @@ public:
 
 	// The following is used for checking whether two nodes are equal
 	// we say that two nodes, s1 and s2, are equal if
-	// both are non-NULL and agree on the id and timestep
+	// both are non-NULL and agree on the id and timestez
 	struct eqnode
 	{
 		bool operator()(const HumanNode* s1, const HumanNode* s2) const
@@ -52,10 +53,14 @@ public:
 class HumanSingle: public SingleAgentSolver
 {
 public:
+    enum Cost {
+        CONF,
+        DIS
+    };
     // find path by time-space A* search
     // Returns a shortest path that does not collide with paths in the path table
-    Path findOptimalPath(const PathTable& path_table);
-    Path findLeastCollisionPath(const PathTable& path_table)
+    Path findOptimalPath(const PathTable& path_table, Cost obj);
+    //Path findLeastCollisionPath(const PathTable& path_table)
 	// find path by time-space A* search
 	// Returns a shortest path that satisfies the constraints of the give node  while
 	// minimizing the number of internal conflicts (that is conflicts with known_paths for other agents found so far).
@@ -77,7 +82,8 @@ private:
 	typedef pairing_heap< HumanNode*, compare<HumanNode::compare_node> > dis_open_t;
 	typedef pairing_heap< HumanNode*, compare<HumanNode::secondary_compare_node> > conf_open_t;
 	dis_open_t dis_open_list;
-	conf_open_t conf_open_t;
+	conf_open_t conf_open_list;
+	conf_open_t dis_focal_list;
 
 	// define typedef for hash_map
 	typedef unordered_set<HumanNode*, HumanNode::NodeHasher, HumanNode::eqnode> hashtable_t;
@@ -86,8 +92,8 @@ private:
 	// Updates the path datamember
 	void updatePath(const LLNode* goal, vector<PathEntry> &path);
 	void updateFocalList();
-	inline HumanNode* popNode();
-	inline void pushNode(HumanNode* node);
+	inline HumanNode* popNode(Cost obj);
+	inline void pushNode(HumanNode* node, Cost obj);
 	void releaseNodes();
 
 };

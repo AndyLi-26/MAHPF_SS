@@ -486,7 +486,6 @@ inline void SpaceTimeAStar::pushNode(AStarNode* node)
 	//	node->focal_handle = focal_list.push(node);
 }
 
-/*
 void SpaceTimeAStar::updateFocalList()
 {
 	auto open_head = open_list.top();
@@ -500,13 +499,13 @@ void SpaceTimeAStar::updateFocalList()
 		}
 		min_f_val = new_min_f_val;
 	}
-}*/
+}
 
 
 void SpaceTimeAStar::releaseNodes()
 {
-	dis_open_list.clear();
-	conf_open_list.clear();
+	open_list.clear();
+	open_list.clear();
 	for (auto node: allNodes_table)
 		delete node;
 	allNodes_table.clear();
