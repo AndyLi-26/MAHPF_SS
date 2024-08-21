@@ -40,7 +40,7 @@ bool LNS::run()
     sum_of_distances = 0;
     for (const auto & agent : agents)
     {
-        sum_of_distances += agent.path_planner->my_heuristic[agent.path_planner->start_location];
+        sum_of_distances += agent.path_planner.my_heuristic[agent.path_planner.start_location];
     }
 
     initial_solution_runtime = 0;
@@ -214,7 +214,7 @@ bool LNS::runEECBS()
     search_engines.reserve(neighbor.agents.size());
     for (int i : neighbor.agents)
     {
-        search_engines.push_back(agents[i].path_planner);
+        search_engines.push_back(&agents[i].path_planner);
     }
 
     ECBS ecbs(search_engines, path_table, screen - 1);
@@ -277,7 +277,7 @@ bool LNS::runCBS()
     search_engines.reserve(neighbor.agents.size());
     for (int i : neighbor.agents)
     {
-        search_engines.push_back(agents[i].path_planner);
+        search_engines.push_back(&agents[i].path_planner);
     }
 
     CBS cbs(search_engines, path_table, screen - 1);
@@ -334,7 +334,7 @@ bool LNS::runPP()
     std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
     if (screen >= 2) {
         for (auto id : shuffled_agents)
-            cout << id << "(" << agents[id].path_planner->my_heuristic[agents[id].path_planner->start_location] <<
+            cout << id << "(" << agents[id].path_planner.my_heuristic[agents[id].path_planner.start_location] <<
                 "->" << agents[id].path.size() - 1 << "), ";
         cout << endl;
     }
@@ -353,7 +353,7 @@ bool LNS::runPP()
             cout << "Remaining agents = " << remaining_agents <<
                 ", remaining time = " << time_limit - runtime << " seconds. " << endl
                 << "Agent " << agents[id].id << endl;
-        agents[id].path = agents[id].path_planner->findOptimalPath(path_table);
+        agents[id].path = agents[id].path_planner.findOptimalPath(path_table);
         if (agents[id].path.empty())
         {
             break;
@@ -707,7 +707,7 @@ bool LNS::generateNeighborByRandomWalk()
     neighbor.agents.assign(neighbors_set.begin(), neighbors_set.end());
     if (screen >= 2)
         cout << "Generate " << neighbor.agents.size() << " neighbors by random walks of agent " << a
-            << "(" << agents[a].path_planner->my_heuristic[agents[a].path_planner->start_location]
+            << "(" << agents[a].path_planner.my_heuristic[agents[a].path_planner.start_location]
             << "->" << agents[a].path.size() - 1 << ")" << endl;
 
     return true;
@@ -768,7 +768,7 @@ void LNS::randomWalk(AgentID id, int start_location, int start_timestep,
             int step = rand() % next_locs.size();
             auto it = next_locs.begin();
             advance(it, step);
-            int next_h_val = agents[id.id].path_planner->my_heuristic[*it];
+            int next_h_val = agents[id.id].path_planner.my_heuristic[*it];
             if (t + 1 + next_h_val < upperbound) // move to this location
             {
                 path_table.getConflictingAgents(id, conflicting_agents, loc, *it, t + 1);
@@ -793,16 +793,16 @@ bool LNS::validateSolution() const
             cout << "No solution for agent " << a1_.id << endl;
             return false;
         }
-        else if (a1_.path_planner->start_location != a1_.path.front().location)
+        else if (a1_.path_planner.start_location != a1_.path.front().location)
         {
             cout << "The path of agent " << a1_.id << " starts from location " << a1_.path.front().location
-                << ", which is different from its start location " << a1_.path_planner->start_location << endl;
+                << ", which is different from its start location " << a1_.path_planner.start_location << endl;
             return false;
         }
-        else if (a1_.path_planner->goal_location != a1_.path.back().location)
+        else if (a1_.path_planner.goal_location != a1_.path.back().location)
         {
             cout << "The path of agent " << a1_.id << " ends at location " << a1_.path.back().location
-                << ", which is different from its goal location " << a1_.path_planner->goal_location << endl;
+                << ", which is different from its goal location " << a1_.path_planner.goal_location << endl;
             return false;
         }
         for (int t = 1; t < (int) a1_.path.size(); t++ )

@@ -76,6 +76,7 @@ public:
 class SingleAgentSolver
 {
 public:
+
 	uint64_t num_expanded = 0;
 	uint64_t num_generated = 0;
 

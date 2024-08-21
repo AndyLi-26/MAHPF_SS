@@ -61,7 +61,7 @@ bool MAHPF::mergeSubOPTIMAL()
 
 bool MAHPF::mergePP()
 {
-    Path p=humans[0].path_planner->findOptimalPath(path_table);
+    Path p=humans[0].path_planner.findOptimalPath(path_table);
     if (!p.empty())
     {
         humans[0].path=p;
@@ -80,7 +80,7 @@ bool MAHPF::runHuman()
 {
     for (int h=0;h<humans.size();h++)
     {
-        Path p=humans[h].path_planner->findOptimalPath(path_table);
+        Path p=humans[h].path_planner.findOptimalPath(path_table);
         if (p.empty())
         {
             cout << "No path found for human:"<<humans[h].id << endl;
@@ -99,7 +99,7 @@ bool MAHPF::runCBS()
     search_engines.reserve(agents.size());
     for (int i = 0; i < agents.size(); i++)
     {
-        search_engines.push_back(agents[i].path_planner);
+        search_engines.push_back(&agents[i].path_planner);
     }
 
     CBS cbs(search_engines, path_table, screen - 1);

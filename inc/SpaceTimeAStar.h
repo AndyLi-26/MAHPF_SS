@@ -7,10 +7,11 @@ class AStarNode: public LLNode
 {
 public:
 	// define a typedefs for handles to the heaps (allow up to quickly update a node in the heap)
-	typedef pairing_heap< AStarNode*, compare<LLNode::compare_node> >::handle_type open_handle_t;
-	typedef pairing_heap< AStarNode*, compare<LLNode::secondary_compare_node> >::handle_type focal_handle_t;
-	open_handle_t open_handle;
-	focal_handle_t focal_handle;
+	typedef pairing_heap< AStarNode*, compare<LLNode::compare_node> >::handle_type dis_open_handle_t;
+	typedef pairing_heap< AStarNode*, compare<LLNode::secondary_compare_node> >::handle_type conf_open_handle_t;
+	dis_open_handle_t dis_open_handle;
+	conf_open_handle_t conf_open_handle;
+	conf_open_handle_t dis_focal_handle;
 
 
 	AStarNode() : LLNode() {}
@@ -34,7 +35,7 @@ public:
 
 	// The following is used for checking whether two nodes are equal
 	// we say that two nodes, s1 and s2, are equal if
-	// both are non-NULL and agree on the id and timestep
+	// both are non-NULL and agree on the id and timestez
 	struct eqnode
 	{
 		bool operator()(const AStarNode* s1, const AStarNode* s2) const
@@ -51,16 +52,22 @@ public:
 class SpaceTimeAStar: public SingleAgentSolver
 {
 public:
+    enum Cost {
+        CONF,
+        DIS
+    };
+
     // find path by time-space A* search
     // Returns a shortest path that does not collide with paths in the path table
-    Path findOptimalPath(const PathTable& path_table);
+    Path findOptimalPath(const PathTable& path_table, Cost obj);
+    Path findOptimalPath(const PathTable& path_table){findOptimalPath(path_table,Cost::DIS);}
+    //Path findLeastCollisionPath(const PathTable& path_table)
 	// find path by time-space A* search
 	// Returns a shortest path that satisfies the constraints of the give node  while
 	// minimizing the number of internal conflicts (that is conflicts with known_paths for other agents found so far).
 	// lowerbound is an underestimation of the length of the path in order to speed up the search.
 	Path findOptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
 						const vector<Path*>& paths, int agent, int lower_bound);
-
 	pair<Path, int> findSuboptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
 		const vector<Path*>& paths, int agent, int lowerbound, double w);  // return the path and the lowerbound
 
@@ -73,10 +80,11 @@ public:
 
 private:
 	// define typedefs and handles for heap
-	typedef pairing_heap< AStarNode*, compare<AStarNode::compare_node> > heap_open_t;
-	typedef pairing_heap< AStarNode*, compare<AStarNode::secondary_compare_node> > heap_focal_t;
-	heap_open_t open_list;
-	heap_focal_t focal_list;
+	typedef pairing_heap< AStarNode*, compare<AStarNode::compare_node> > dis_open_t;
+	typedef pairing_heap< AStarNode*, compare<AStarNode::secondary_compare_node> > conf_open_t;
+	dis_open_t dis_open_list;
+	conf_open_t conf_open_list;
+	conf_open_t dis_focal_list;
 
 	// define typedef for hash_map
 	typedef unordered_set<AStarNode*, AStarNode::NodeHasher, AStarNode::eqnode> hashtable_t;
@@ -85,8 +93,8 @@ private:
 	// Updates the path datamember
 	void updatePath(const LLNode* goal, vector<PathEntry> &path);
 	void updateFocalList();
-	inline AStarNode* popNode();
-	inline void pushNode(AStarNode* node);
+	inline AStarNode* popNode(Cost obj);
+	inline void pushNode(AStarNode* node, Cost obj);
 	void releaseNodes();
 
 };

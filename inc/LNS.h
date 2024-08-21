@@ -1,5 +1,6 @@
 #pragma once
 #include "ECBS.h"
+//#include "humanSingle.h"
 #include "lacam/instance.hpp"
 #include "lacam/graph.hpp"
 #include "lacam/planner.hpp"
@@ -26,17 +27,12 @@ enum destroy_heuristic { RANDOMAGENTS, RANDOMWALK, INTERSECTION, DESTORY_COUNT }
 struct Agent
 {
     AgentID id;
-    SingleAgentSolver* path_planner; // start, goal, and heuristics are stored in the path planner
+    SpaceTimeAStar path_planner; // start, goal, and heuristics are stored in the path planner
     Path path;
 
-    Agent(const Instance& instance, AgentID id) : id(id){
-        if (id.type == AgentType::HUMAN)
-            path_planner = new SpaceTimeAStar(instance, id);
-        else if (id.type==AgentType::ROBOT)
-            path_planner = new SpaceTimeAStar(instance, id);
-    }
+    Agent(const Instance& instance, AgentID id) : id(id), path_planner(instance,id){}
 
-    int getNumOfDelays() const { return (int) path.size() - 1 - path_planner->my_heuristic[path_planner->start_location]; }
+    int getNumOfDelays() const { return (int) path.size() - 1 - path_planner.my_heuristic[path_planner.start_location]; }
 
 };
 
