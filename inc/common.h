@@ -42,6 +42,10 @@ using std::string;
 #define MAX_COST INT_MAX / 2
 #define MAX_NODES INT_MAX / 2
 
+enum MOVEMENTS
+{
+    U,D,L,R,W
+};
 
 enum AgentType
 {

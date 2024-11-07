@@ -14,11 +14,13 @@ class MAHPF
 
         Stats init_sol;
         Stats final_sol;
+        int cur_Soc;
 
         void logStats(int n);
         void logExpStats(const string& statsFn, const string& map, const string& instance, int r, int h,
                 const string& initAlgo, const string& mergeAlgo);
         void logPath(string fn);
+        void logTrackerPath(string fn);
         void printPathsT(bool only_conf);
         void printPathsA();
 

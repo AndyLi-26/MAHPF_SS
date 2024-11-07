@@ -20,7 +20,7 @@
 #include "winpibt.h"
 */
 using namespace std::chrono;
-typedef std::chrono::high_resolution_clock Time;
+//typedef std::chrono::high_resolution_clock Time;
 typedef std::chrono::duration<float> fsec;
 enum destroy_heuristic { RANDOMAGENTS, RANDOMWALK, INTERSECTION, DESTORY_COUNT };
 

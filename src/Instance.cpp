@@ -547,3 +547,4 @@ list<int> Instance::getNeighbors(int curr) const
     }
     return neighbors;
 }
+

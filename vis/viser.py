@@ -1,5 +1,8 @@
 import tkinter as tk
-import re
+import re,math
+from agent import Agent
+
+PRT_PATH=False
 
 class AnimationGenerator:
     def __init__(self, root,fn_map, fn_log):
@@ -21,10 +24,12 @@ class AnimationGenerator:
         self.read_map(fn_map)
         self.read_log(fn_log)
         self.draw_map()
+        if PRT_PATH:
+            self.draw_path()
         self.create_image()
         self.inc=20
 
-        print(len(self.human_path[0]))
+        #print(len(self.agent))
         print(self.make_span)
         self.animate()
 
@@ -34,6 +39,11 @@ class AnimationGenerator:
             self.t+=(self.inc/1000)
             self.canvas.itemconfig(self.text_item, text=f"Time Step: {round(self.t,3)}")
 
+            for a in self.agents:
+                pos=a.getCoord(self.t)
+                self.canvas.coords(a.IDX["circle"],*pos)
+
+            '''
             for i in range(len(self.human_path)):
                 if self.t>=len(self.human_path[i])-1:
                     pos=self.coord2pos(*self.human_path[i][-1])
@@ -55,7 +65,6 @@ class AnimationGenerator:
                     pos2=self.coord2pos(*self.robot_path[i][int(self.t)+1])
                     pos=self.shift_agent(pos1,pos2)
                 self.canvas.coords(self.robots[i][0],*pos)
-            '''
             self.canvas.move(self.circle, self.dx, self.dy)
 
             # Get the current position of the circle
@@ -86,29 +95,26 @@ class AnimationGenerator:
 
     def read_log(self, fn_log):
         self.make_span=-1
-        self.human_path=[]
-        self.robot_path=[]
+        self.agents=[]
+        #self.human_path=[]
+        #self.robot_path=[]
         with open(fn_log) as f:
             for l in f:
                 if "human" in l:
-                    curr=self.human_path
+                    role="H"
                     continue
                 if "robot" in l:
-                    curr=self.robot_path
+                    role="R"
                     continue
                 l=[tuple(map(int,i.split(","))) for i in l.strip("\n;").split(";")]
-                curr.append(l)
+                a=Agent(role,len(self.agents),self.cell_size)
+                a.setPath(l)
+                a.setColor("red" if role=="H" else "blue")
+                self.agents.append(a)
                 self.make_span=max(self.make_span,len(l))
 
-    def draw_map(self):
-        for i, row in enumerate(self.map):
-            for j, value in enumerate(row):
-                coord=self.coord2pos(i,j)
-                color = "white" if value == '1' else "black"
-                self.canvas.create_rectangle(*coord, fill=color, outline="gray")
 
-    def create_image(self):
-        self.text_item = self.canvas.create_text(1300, 150, text=f"Time Step: {self.t}", font=("Helvetica", 24), fill="black")
+    def draw_map(self):
         def generate_colors(n):
             colors = []
             for i in range(n):
@@ -118,33 +124,62 @@ class AnimationGenerator:
                 hex_color = f'#{r:02x}{g:02x}{b:02x}'
                 colors.append(hex_color)
             return colors
+        for i, row in enumerate(self.map):
+            for j, value in enumerate(row):
+                coord=self.coord2pos(i,j)
+                color = "white" if value == '1' else "black"
+                self.canvas.create_rectangle(*coord, fill=color, outline="gray")
 
-        temp=generate_colors(len(self.human_path)+len(self.robot_path))
-        self.humans=[]
-        for i in self.human_path:
-            s=i[0]
-            a_color="red"
-            pos=self.coord2pos(*s)
-            agent_cir = self.canvas.create_oval(*pos, fill=a_color)
-            self.humans.append((agent_cir,a_color))
+    def draw_path(self):
+        for a in self.agents:
+            s=a.getStart()
             for e in i[1:]:
                 pos1=self.coord2center_pos(*s)
                 pos2=self.coord2center_pos(*e)
-                self.canvas.create_line(*pos1,*pos2, fill=a_color, width=2)
+                self.canvas.create_line(*pos1,*pos2, fill=a.color, width=2)
+                s=e
+
+    def create_image(self):
+        self.text_item = self.canvas.create_text(1300, 150, text=f"Time Step: {self.t}", font=("Helvetica", 24), fill="black")
+
+        #temp=generate_colors(len(self.human_path)+len(self.robot_path))
+
+        for a in self.agents:
+            s=a.getStart()
+            pos=a.coord2pos(*s)
+            cir = self.canvas.create_oval(*pos, fill=a.color)
+            start = self.create_star(self.coord2center_pos(*s), a.color, 3)
+            end = self.create_star(self.coord2center_pos(*a.getGoal()), a.color, 5)
+            a.setIDX({"circle":cir,"start":start,"end":end})
+            #self.humans.append((agent_cir,"red"))
+
+        '''
+        self.humans=[]
+        for i in self.human_path:
+            s=i[0]
+            #a_color="red"
+            pos=self.coord2pos(*s)
+            agent_cir = self.canvas.create_oval(*pos, fill="red")
+            self.humans.append((agent_cir,"red"))
+            for e in i[1:]:
+                pos1=self.coord2center_pos(*s)
+                pos2=self.coord2center_pos(*e)
+                self.canvas.create_line(*pos1,*pos2, fill="red", width=2)
                 s=e
 
         self.robots=[]
         for i in self.robot_path:
             s=i[0]
-            a_color=temp.pop()
+            #a_color=temp.pop()
             pos=self.coord2pos(*s)
-            agent_cir = self.canvas.create_oval(*pos, fill=a_color)
-            self.robots.append((agent_cir,a_color))
+            agent_cir = self.canvas.create_oval(*pos, fill="blue")
+            self.robots.append((agent_cir,"blue"))
             for e in i[1:]:
                 pos1=self.coord2center_pos(*s)
                 pos2=self.coord2center_pos(*e)
-                self.canvas.create_line(*pos1,*pos2, fill=a_color, width=2)
+                self.canvas.create_line(*pos1,*pos2, fill="blue", width=2)
                 s=e
+        '''
 
     def coord2center_pos(self,i,j):
         p=self.coord2pos(i,j)
@@ -157,17 +192,31 @@ class AnimationGenerator:
         y1 = y0 + self.cell_size
         return x0,y0,x1,y1
 
+    '''
     def shift_agent(self,pos1,pos2):
         shift_t=self.t-int(self.t)
         pos=[(pos2[i]-pos1[i])*shift_t+pos1[i] for i in range(4)]
         return pos
+    '''
 
+    def create_star(self, center, c, p):
+        outer_angle = 2 * math.pi / p  # Full circle divided by the number of points
+        inner_angle = outer_angle / 2       # Angle between outer and inner points
+        coordinates = []
 
-
+        for i in range(p * 2):  # 5 outer and 5 inner points, so total 10
+            angle = i * outer_angle / 2  # Alternate between outer and inner points
+            radius = self.cell_size/3 if i % 2 == 0 else self.cell_size / 6
+            # Calculate coordinates
+            x = center[0] + radius * math.cos(angle)
+            y = center[1] - radius * math.sin(angle)
+            coordinates.append((x, y))
+        flattened_coordinates = [coord for p in coordinates for coord in p]
+        return self.canvas.create_polygon(flattened_coordinates, outline=c, fill=c, width=2)
 
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = AnimationGenerator(root, "../bench_mark/empty-8-8/map.map","path.log")
+    app = AnimationGenerator(root, "../bench_mark/empty-8-8/map.map","init.log")
     root.mainloop()
 

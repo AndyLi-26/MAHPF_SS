@@ -14,6 +14,7 @@ MAHPF::MAHPF(const Instance& instance, double time_limit,
     for (int i = 0; i < M; i++)
         humans.emplace_back(instance, AgentID(i,AgentType::HUMAN));
     time_limit=time_limit;
+    cur_Soc=0;
     run_time=0;
     init_conf=0;
 }
@@ -41,6 +42,8 @@ bool MAHPF::getInitialSolution() {
     for (Agent r:robots)
         init_sol.Soc+=r.path.size();
     init_sol.makespan=std::max(path_table.makespan,(int)humans[0].path.size());
+
+    cur_Soc=init_sol.Soc;
     return succ;
 }
 
@@ -51,7 +54,7 @@ bool MAHPF::merge()
     if (confAgents.empty())
     {
         cout<<"no conflict already, no need to merge"<<endl;
-        logPath("path.log");
+        //logPath("path.log");
         return true;
     }
     cout<<"confAgents: ";
@@ -105,6 +108,7 @@ bool MAHPF::merge()
     for (Agent r:robots)
         final_sol.Soc+=r.path.size();
     final_sol.makespan=std::max(path_table.makespan,(int)humans[0].path.size());
+    cur_Soc=final_sol.Soc;
     return true;
 }
 
@@ -217,7 +221,7 @@ bool MAHPF::mergePP(bool fix_human)
 
     vector<int> idx_in;
     vector<int> idx_out;
-    for (int i=1;i<=robots.size();i++)
+    for (int i=1;i<robots.size();i++)
         idx_out.push_back(i);
     for (AgentID id:failedAgents)
     {
@@ -248,6 +252,7 @@ bool MAHPF::mergePP(bool fix_human)
             fail=false;
             for (int id:idx_in)
             {
+                cout<<"id: "<<id<<endl;
                 Path p=robots[id].path_planner.findOptimalPath(path_table);
                 if (!p.empty())
                 {
@@ -533,35 +538,101 @@ void MAHPF::logPath(string fn)
     fw.close();
 }
 
+void MAHPF::logTrackerPath(string fn)
+{
+    ofstream fw(fn, std::ios::out);
+    if (!fw.is_open()){
+        std::cerr<<"did not open result file properly" << std::endl<<std::flush;
+        exit(1);
+    }
+
+    fw<<"\"agents\",\"lower_cost\",\"lower_date\",\"solution_cost\",\"solution_date\",\"path\" "<<endl;
+    fw<<"\""<< (humans.size()+robots.size()) <<" \", \"3\", \"2022-11-29\",\"";
+    fw<<cur_Soc<<"\",\"2022-11-29\",\"";
+
+
+    int ncols=instance.num_of_cols;
+
+    for (int r=0;r<robots.size();r++)
+    {
+        int next, prev;
+        for (int t=1;t<robots[r].path.size();t++)
+        {
+            next=robots[r].path[t].location;
+            prev=robots[r].path[t-1].location;
+            if (next - prev == 1) {
+                fw << "r";
+            } else if (next - prev == -1) {
+                fw << "l";
+            } else if (next - prev == 0) {
+                fw << "w";
+            } else if (next - prev == ncols) {
+                fw << "d";
+            } else if (next - prev == -ncols) {
+                fw << "u";
+            } else {
+                std::cerr << "invalid path" << std::endl << std::flush;
+            }
+        }
+        fw<<endl;
+    }
+
+
+    for (int h=0;h<humans.size();h++)
+    {
+        int next, prev;
+        for (int t=1;t<humans[h].path.size();t++)
+        {
+            next=humans[h].path[t].location;
+            prev=humans[h].path[t-1].location;
+            if (next - prev == 1) {
+                fw << "r";
+            } else if (next - prev == -1) {
+                fw << "l";
+            } else if (next - prev == 0) {
+                fw << "w";
+            } else if (next - prev == ncols) {
+                fw << "d";
+            } else if (next - prev == -ncols) {
+                fw << "u";
+            } else {
+                std::cerr << "invalid path" << std::endl << std::flush;
+            }
+        }
+        fw<<endl;
+    }
+    fw<<"\" ";
+}
+
 void MAHPF::logStats(int n)
 {
-    if (n==0)
+        if (n==0)
+        {
+            cout<<init_sol;
+            cout<<"init time"<<run_time<<endl;
+        }
+        else if (n==1)
+        {
+            cout<<final_sol;
+            cout<<"merge time"<<run_time<<endl;
+        }
+    }
+
+    void MAHPF::logExpStats(const string& statsFn, const string& map, const string& instance, int r, int h,
+            const string& initAlgo, const string& mergeAlgo)
     {
-        cout<<init_sol;
-        cout<<"init time"<<run_time<<endl;
-    }
-    else if (n==1)
-    {
-        cout<<final_sol;
-        cout<<"merge time"<<run_time<<endl;
-    }
-}
+        std::ofstream file(statsFn, std::ios::app);
 
-void MAHPF::logExpStats(const string& statsFn, const string& map, const string& instance, int r, int h,
-        const string& initAlgo, const string& mergeAlgo)
-{
-    std::ofstream file(statsFn, std::ios::app);
+        if (file.is_open()) {
+            file<<map<<", "<<instance<<", "<<r<<", "<<h<<", "<<run_time
+                <<", "<<initAlgo<<", "<<init_sol.makespan<<", "<<init_sol.Soc
+                <<", "<<init_conf
+                <<", "<<mergeAlgo<<", "<<final_sol.makespan<<", "<<final_sol.Soc
+                <<", "<<endl;
+            file.close();     // Close the file
+        } else {
+            std::cerr << "Error: Could not open file for appending." << std::endl;
+        }
 
-    if (file.is_open()) {
-        file<<map<<", "<<instance<<", "<<r<<", "<<h<<", "<<run_time
-            <<", "<<initAlgo<<", "<<init_sol.makespan<<", "<<init_sol.Soc
-            <<", "<<init_conf
-            <<", "<<mergeAlgo<<", "<<final_sol.makespan<<", "<<final_sol.Soc
-            <<", "<<endl;
-        file.close();     // Close the file
-    } else {
-        std::cerr << "Error: Could not open file for appending." << std::endl;
     }
-
-}
 

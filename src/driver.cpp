@@ -76,10 +76,14 @@ int main(int argc, char** argv)
     if (mahpf.getInitialSolution())
     {
         mahpf.logStats(0);
+        mahpf.logPath("init.log");
+        //mahpf.logTrackerPath("init_path.csv");
         if (mahpf.merge())
         {
             cout<<"successfully merged"<<endl;
             mahpf.logStats(1);
+            mahpf.logPath("merged.log");
+            //mahpf.logTrackerPath("final_path.csv");
         }
         else {
             cout<<"merge failed, choice another merge algo"<<endl;
@@ -89,8 +93,11 @@ int main(int argc, char** argv)
         cout<<"no initial solution found"<<endl;
     }
 
-    string statsFn=vm["stats"].as<string>();
-    mahpf.logExpStats(statsFn,map,agents,a,h,initAlgo,mergeAlgo);
+    if (vm.count("stats"))
+    {
+        string statsFn=vm["stats"].as<string>();
+        mahpf.logExpStats(statsFn,map,agents,a,h,initAlgo,mergeAlgo);
+    }
 
-	return 0;
+    return 0;
 }
