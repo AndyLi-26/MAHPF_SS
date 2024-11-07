@@ -77,53 +77,53 @@ class SingleAgentSolver
 {
 public:
 
-	uint64_t num_expanded = 0;
-	uint64_t num_generated = 0;
+    uint64_t num_expanded = 0;
+    uint64_t num_generated = 0;
 
-	double runtime_build_CT = 0; // runtimr of building constraint table
-	double runtime_build_CAT = 0; // runtime of building conflict avoidance table
+    double runtime_build_CT = 0; // runtimr of building constraint table
+    double runtime_build_CAT = 0; // runtime of building conflict avoidance table
 
     AgentID id;
-	int start_location;
-	int goal_location;
-	vector<int> my_heuristic;  // this is the precomputed heuristic for this agent
-	int compute_heuristic(int from, int to) const  // compute admissible heuristic between two locations
-	{
-		return max(get_DH_heuristic(from, to), instance.getManhattanDistance(from, to));
-	}
-	const Instance& instance;
+    int start_location;
+    int goal_location;
+    vector<int> my_heuristic;  // this is the precomputed heuristic for this agent
+    int compute_heuristic(int from, int to) const  // compute admissible heuristic between two locations
+    {
+        return max(get_DH_heuristic(from, to), instance.getManhattanDistance(from, to));
+    }
+    const Instance& instance;
 
     virtual Path findOptimalPath(const PathTable& path_table)=0;
-	virtual Path findOptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
-		const vector<Path*>& paths, int agent, int lower_bound) = 0;
-	virtual pair<Path, int> findSuboptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
-		const vector<Path*>& paths, int agent, int lowerbound, double w) = 0;  // return the path and the lowerbound
-	virtual int getTravelTime(int start, int end, const ConstraintTable& constraint_table, int upper_bound) = 0;
-	virtual string getName() const = 0;
+    virtual Path findOptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
+            const vector<Path*>& paths, int agent, int lower_bound) = 0;
+    virtual pair<Path, int> findSuboptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
+            const vector<Path*>& paths, int agent, int lowerbound, double w) = 0;  // return the path and the lowerbound
+    virtual int getTravelTime(int start, int end, const ConstraintTable& constraint_table, int upper_bound) = 0;
+    virtual string getName() const = 0;
 
-	list<int> getNextLocations(int curr) const; // including itself and its neighbors
-	list<int> getNeighbors(int curr) const { return instance.getNeighbors(curr); }
+    list<int> getNextLocations(int curr) const; // including itself and its neighbors
+    list<int> getNeighbors(int curr) const { return instance.getNeighbors(curr); }
 
-	// int getStartLocation() const {return instance.start_agent[agent]; }
-	// int getGoalLocation() const {return instance.goal_agent[agent]; }
+    // int getStartLocation() const {return instance.start_agent[agent]; }
+    // int getGoalLocation() const {return instance.goal_agent[agent]; }
 
-	SingleAgentSolver(const Instance& instance, AgentID id) :
-		instance(instance), //agent(agent),
+    SingleAgentSolver(const Instance& instance, AgentID id) :
+        instance(instance), //agent(agent),
         id(id),
-		start_location(instance.getStart(id)),
-		goal_location(instance.getGoal(id))
-	{
-		compute_heuristics();
-	}
+        start_location(instance.getStart(id)),
+        goal_location(instance.getGoal(id))
+    {
+        compute_heuristics();
+    }
 
-  virtual ~SingleAgentSolver()= default;
+    virtual ~SingleAgentSolver()= default;
 
-protected:
-	int min_f_val; // minimal f value in OPEN
-	// int lower_bound; // Threshold for FOCAL
-	double w = 1; // suboptimal bound
+    protected:
+    int min_f_val; // minimal f value in OPEN
+                   // int lower_bound; // Threshold for FOCAL
+    double w = 1; // suboptimal bound
 
-	void compute_heuristics();
-	int get_DH_heuristic(int from, int to) const { return abs(my_heuristic[from] - my_heuristic[to]); }
+    void compute_heuristics();
+    int get_DH_heuristic(int from, int to) const { return abs(my_heuristic[from] - my_heuristic[to]); }
 };
 

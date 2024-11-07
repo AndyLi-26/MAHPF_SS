@@ -21,7 +21,8 @@ void PathTable::deletePath(AgentID id, const Path& path)
         return;
     for (int t = 0; t < (int)path.size(); t++)
     {
-        assert(table[path[t].location].size() > t && table[path[t].location][t] == id);
+        assert(table[path[t].location].size() > t);
+        assert(table[path[t].location][t] == id);
         table[path[t].location][t] = NO_AGENT;
         goals[path.back().location] = MAX_COST;
     }

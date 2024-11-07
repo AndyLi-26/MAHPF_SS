@@ -2,13 +2,13 @@
 #include "common.h"
 
 
-enum conflict_type { MUTEX, TARGET, CORRIDOR, RECTANGLE, STANDARD, TYPE_COUNT };
+enum conflict_type { MUTEX, TARGET, CORRIDOR, RECTANGLE, STANDARD, TYPE_COUNT, HUMAN_CONF };
 
 enum conflict_priority { CARDINAL, PSEUDO_CARDINAL, SEMI, NON, UNKNOWN, PRIORITY_COUNT };
-// Pseudo-cardinal conflicts are semi-/non-caridnal conflicts between dependent agents. 
-// We prioritize them over normal semi-/non-caridnal conflicts 
+// Pseudo-cardinal conflicts are semi-/non-caridnal conflicts between dependent agents.
+// We prioritize them over normal semi-/non-caridnal conflicts
 
-enum constraint_type { LEQLENGTH, GLENGTH, RANGE, BARRIER, VERTEX, EDGE, 
+enum constraint_type { LEQLENGTH, GLENGTH, RANGE, BARRIER, VERTEX, EDGE,
 											POSITIVE_VERTEX, POSITIVE_EDGE, CONSTRAINT_COUNT};
 
 enum conflict_selection {RANDOM, EARLIEST, CONFLICTS, MCONSTRAINTS, FCONSTRAINTS, WIDTH, SINGLETONS};
@@ -16,9 +16,9 @@ enum conflict_selection {RANDOM, EARLIEST, CONFLICTS, MCONSTRAINTS, FCONSTRAINTS
 typedef std::tuple<int, int, int, int, constraint_type> Constraint;
 // <agent, loc, -1, t, VERTEX>
 // <agent, loc, -1, t, POSITIVE_VERTEX>
-// <agent, from, to, t, EDGE> 
+// <agent, from, to, t, EDGE>
 // <agent, B1, B2, t, BARRIER>
-// <agent, loc, t1, t2, CORRIDOR> 
+// <agent, loc, t1, t2, CORRIDOR>
 // <agent, loc, -1, t, LEQLENGTH>: path of agent_id should be of length at most t, and any other agent cannot be at loc at or after timestep t
 // <agent, loc, -1, t, GLENGTH>: path of agent_id should be of length at least t + 1
 
@@ -37,6 +37,28 @@ public:
 	double secondary_priority = 0; // used as the tie-breaking creteria for conflict selection
     int getConflictId() const { return int(type); }  // int(PRIORITY_COUNT) * int(type) + int(priority); }
 
+    void humanVConflict(int a1, int a2, int v, int t)
+    {
+        assert(a2>a1);
+        constraint1.clear();
+        constraint2.clear();
+		this->a1 = a1;
+		this->a2 = a2;
+		this->constraint1.emplace_back(a1, v, -1, t, constraint_type::VERTEX);
+        type=conflict_type::HUMAN_CONF;
+    }
+
+	void humanEConflict(int a1, int a2, int v1, int v2, int t)
+	{
+        constraint1.clear();
+        constraint2.clear();
+		this->a1 = a1;
+		this->a2 = a2;
+		this->constraint1.emplace_back(a1, v1, v2, t, constraint_type::EDGE);
+		type = conflict_type::HUMAN_CONF;
+	}
+
+
 	void vertexConflict(int a1, int a2, int v, int t)
 	{
         constraint1.clear();
@@ -47,7 +69,7 @@ public:
 		this->constraint2.emplace_back(a2, v, -1, t, constraint_type::VERTEX);
 		type = conflict_type::STANDARD;
 	}
-		
+
 	void edgeConflict(int a1, int a2, int v1, int v2, int t)
 	{
         constraint1.clear();

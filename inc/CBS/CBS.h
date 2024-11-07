@@ -3,6 +3,7 @@
 #include "RectangleReasoning.h"
 #include "CorridorReasoning.h"
 #include "MutexReasoning.h"
+#include "SpaceTimeAStar.h"
 
 enum high_level_solver_type { ASTAR, ASTAREPS, NEW, EES };
 
@@ -42,11 +43,12 @@ public:
 	HLNode* dummy_start = nullptr;
 	//HLNode* goal_node = nullptr;
 
-
-
 	bool solution_found = false;
+    bool solving_human = false;
 	int solution_cost = -2;
 	vector<Path*> paths;
+    SpaceTimeAStar* h_solver;
+	Path Ps_human;
 
 	/////////////////////////////////////////////////////////////////////////////////////////
 	// set params
@@ -73,8 +75,9 @@ public:
 	void setNodeLimit(int n) { node_limit = n; }
 
 	////////////////////////////////////////////////////////////////////////////////////////////
-	// Runs the algorithm until the problem is solved or time is exhausted 
-	bool solve(double time_limit, int cost_lowerbound = 0, int cost_upperbound = MAX_COST);
+	// Runs the algorithm until the problem is solved or time is exhausted
+	bool solve(double time_limit, int cost_lowerbound = 0, int cost_upperbound = MAX_COST, bool toResume=false);
+    void injectHuman(SpaceTimeAStar* h);
 
 	int getLowerBound() const { return cost_lowerbound; }
     CBSNode* getGoalNode() { return goal_node; }
@@ -112,7 +115,7 @@ protected:
 	conflict_selection conflict_seletion_rule;
 	node_selection node_selection_fule;
 
-	MDDTable mdd_helper;	
+	MDDTable mdd_helper;
 	RectangleReasoning rectangle_helper;
 	CorridorReasoning corridor_helper;
 	MutexReasoning mutex_helper;
@@ -124,13 +127,14 @@ protected:
 	string getSolverName() const;
 
 	int screen;
-	
+
 	double time_limit;
 	double suboptimality = 1.0;
 	int cost_lowerbound = 0;
 	int inadmissible_cost_lowerbound;
 	int node_limit = MAX_NODES;
 	int cost_upperbound = MAX_COST;
+    Conflict h_conf;
 
 	vector<ConstraintTable> initial_constraints;
 	clock_t start;
@@ -185,6 +189,9 @@ private: // CBS only, cannot be used by ECBS
 	bool generateRoot();
 	bool findPathForSingleAgent(CBSNode*  node, int ag, int lower_bound = 0);
 	void classifyConflicts(CBSNode &parent);
+    bool validateHuman();
+    bool validateHumanPath(const PathPool& Ps);
+    int checkTermination(HLNode* curr);
 
 	void printPaths() const;
 };

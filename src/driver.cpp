@@ -19,9 +19,9 @@ int main(int argc, char** argv)
 		// params for the input instance and experiment settings
 		("map,m", po::value<string>()->required(), "input file for map")
 		("agents,a", po::value<string>()->required(), "input file for agents")
-		("humans,h", po::value<string>()->required(), "input file for humans")
-		("agentNum,k", po::value<int>()->default_value(0), "number of agents")
-		("humanNum", po::value<int>()->default_value(1), "number of human")
+		//("humans,h", po::value<string>()->required(), "input file for humans")
+		("robotNum,r", po::value<int>()->default_value(0), "number of agents")
+		("humanNum,h", po::value<int>()->default_value(1), "number of human")
         ("output,o", po::value<string>(), "output file")
 		("cutoffTime,t", po::value<double>()->default_value(7200), "cutoff time (seconds)")
 		("screen,s", po::value<int>()->default_value(0),
@@ -37,7 +37,7 @@ int main(int argc, char** argv)
         ("initAlgo", po::value<string>()->default_value("OPTIMAL"),
                 "MAPF algorithm for finding the initial solution (OPTIMAL,Sub_OPTIMAL)")
         ("mergeAlgo", po::value<string>()->default_value("MCP"),
-                "MAPF algorithm for finding the initial solution (MCP,LNS)")
+                "MAPF algorithm for finding the merge solution (MCP,LNS,PP)")
         ("replanAlgo", po::value<string>()->default_value("PP"),
                 "MAPF algorithm for replanning (EECBS, CBS, PP)")
         ("destoryStrategy", po::value<string>()->default_value("Adaptive"),
@@ -64,63 +64,33 @@ int main(int argc, char** argv)
 
 	srand((int)time(0));
 
-	Instance instance(vm["map"].as<string>(), vm["agents"].as<string>(),vm["humans"].as<string>(),
-            vm["humanNum"].as<int>(),vm["agentNum"].as<int>());
+    string map=vm["map"].as<string>(),agents=vm["agents"].as<string>();
+    int h=vm["humanNum"].as<int>(),a=vm["robotNum"].as<int>();
+	Instance instance(map, agents,h,a);
+
     double time_limit = vm["cutoffTime"].as<double>();
     int screen = vm["screen"].as<int>();
 	srand(0);
-    MAHPF mahpf(instance, time_limit, vm["initAlgo"].as<string>(), vm["mergeAlgo"].as<string>(), screen);
+    string initAlgo=vm["initAlgo"].as<string>(),mergeAlgo=vm["mergeAlgo"].as<string>();
+    MAHPF mahpf(instance, time_limit, initAlgo, mergeAlgo, screen);
     if (mahpf.getInitialSolution())
-        mahpf.merge();
+    {
+        mahpf.logStats(0);
+        if (mahpf.merge())
+        {
+            cout<<"successfully merged"<<endl;
+            mahpf.logStats(1);
+        }
+        else {
+            cout<<"merge failed, choice another merge algo"<<endl;
+        };
+    }
     else {
         cout<<"no initial solution found"<<endl;
     }
 
+    string statsFn=vm["stats"].as<string>();
+    mahpf.logExpStats(statsFn,map,agents,a,h,initAlgo,mergeAlgo);
 
-    /*
-	if (vm["solver"].as<string>() == "LNS")
-    {
-        LNS lns(instance, time_limit,
-                vm["initAlgo"].as<string>(),
-                vm["replanAlgo"].as<string>(),
-                vm["destoryStrategy"].as<string>(),
-                vm["neighborSize"].as<int>(),
-                vm["maxIterations"].as<int>(), screen//, pipp_option
-                );
-        bool succ = lns.run();
-        if (succ)
-            lns.validateSolution();
-        if (vm.count("output"))
-            lns.writeResultToFile(vm["output"].as<string>());
-        if (vm.count("stats"))
-            lns.writeIterStatsToFile(vm["stats"].as<string>());
-        // lns.writePathsToFile("path.txt");
-    }
-    else if (vm["solver"].as<string>() == "A-BCBS") // anytime BCBS(w, 1)
-    {
-        AnytimeBCBS bcbs(instance, time_limit, screen);
-        bcbs.run();
-        bcbs.validateSolution();
-        if (vm.count("output"))
-            bcbs.writeResultToFile(vm["output"].as<string>());
-        if (vm.count("stats"))
-            bcbs.writeIterStatsToFile(vm["stats"].as<string>());
-    }
-    else if (vm["solver"].as<string>() == "A-EECBS") // anytime EECBS
-    {
-        AnytimeEECBS eecbs(instance, time_limit, screen);
-        eecbs.run();
-        eecbs.validateSolution();
-        if (vm.count("output"))
-            eecbs.writeResultToFile(vm["output"].as<string>());
-        if (vm.count("stats"))
-            eecbs.writeIterStatsToFile(vm["stats"].as<string>());
-    }
-	else
-    {
-	    cerr << "Solver " << vm["solver"].as<string>() << " does not exist!" << endl;
-	    exit(-1);
-    }
-    */
 	return 0;
 }

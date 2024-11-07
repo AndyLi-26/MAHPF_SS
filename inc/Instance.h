@@ -1,5 +1,9 @@
 #pragma once
+#include<boost/tokenizer.hpp>
 #include"common.h"
+#include <algorithm>    // std::shuffle
+#include <random>      // std::default_random_engine
+#include <chrono>       // std::chrono::system_clock
 
 
 // Currently only works for undirected unweighted 4-nighbor grids
@@ -13,7 +17,7 @@ public:
 	// enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
 
 	Instance()=default;
-	Instance(const string& map_fname, const string& agent_fname,const string& human_fname,
+	Instance(const string& map_fname, const string& agent_fname,
             int num_of_humans=0,int num_of_agents = 0,
             int num_of_rows = 0, int num_of_cols = 0, int num_of_obstacles = 0, int warehouse_width = 0);
 
@@ -24,7 +28,8 @@ public:
     vector<int> getGoals(AgentType type) const {return type==AgentType::ROBOT?goal_agent: goal_human;};
     int getStart(AgentID id) const {return  id.type==AgentType::ROBOT?start_agent[id.id]:start_human[id.id];};
     int getGoal(AgentID id) const {return  id.type==AgentType::ROBOT?goal_agent[id.id]:goal_human[id.id];};
-
+    bool setObs(int id)   {if (my_map[id])  return false; else my_map[id]=true;  return true;};
+    bool unsetObs(int id) {if (!my_map[id]) return false; else my_map[id]=false; return true;};
 
     inline bool isObstacle(int loc) const { return my_map[loc]; }
     inline bool validMove(int curr, int next) const
@@ -77,10 +82,9 @@ public:
 	string getInstanceName() const { return agent_fname; }
 private:
 	  // int moves_offset[MOVE_COUNT];
-	  vector<bool> my_map;
+	  vector<bool> my_map; //true for obs, and false for free space
 	  string map_fname;
 	  string agent_fname;
-	  string human_fname;
 
 	  int num_of_agents;
 	  vector<int> start_agent;
@@ -95,10 +99,11 @@ private:
 	  void saveMap() const;
 
 	  bool loadAgents();
-	  bool loadHumans();
+	  //bool loadHumans();
 	  void saveAgents() const;
 	  void saveNathan() const;
 
+      task line2task(boost::tokenizer< boost::char_separator<char> > tok);
 	  void generateConnectedRandomGrid(int rows, int cols, int obstacles); // initialize new [rows x cols] map with random obstacles
 	  void generateRandomAgents(int warehouse_width);
 	  bool addObstacle(int obstacle); // add this obsatcle only if the map is still connected

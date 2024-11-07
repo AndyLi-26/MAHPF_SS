@@ -2,14 +2,13 @@
 
 std::ostream& operator<<(std::ostream& os, const Path& path)
 {
-    os<<"[";
+    os<<path.size()<<" [";
     for (const PathEntry& entry : path) {
         os<<entry.location<<", ";
     }
     os<<"]"<<endl;
 	return os;
 }
-
 
 bool isSamePath(const Path& p1, const Path& p2)
 {

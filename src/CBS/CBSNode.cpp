@@ -1,6 +1,5 @@
 #include "CBSNode.h"
 
-
 void HLNode::clear()
 {
 	conflicts.clear();

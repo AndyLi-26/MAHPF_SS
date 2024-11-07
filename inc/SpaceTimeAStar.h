@@ -60,7 +60,7 @@ public:
     // find path by time-space A* search
     // Returns a shortest path that does not collide with paths in the path table
     Path findOptimalPath(const PathTable& path_table, Cost obj);
-    Path findOptimalPath(const PathTable& path_table){findOptimalPath(path_table,Cost::DIS);}
+    Path findOptimalPath(const PathTable& path_table) {return findOptimalPath(path_table,Cost::DIS);}
     //Path findLeastCollisionPath(const PathTable& path_table)
 	// find path by time-space A* search
 	// Returns a shortest path that satisfies the constraints of the give node  while
@@ -74,6 +74,8 @@ public:
 	int getTravelTime(int start, int end, const ConstraintTable& constraint_table, int upper_bound);
 
 	string getName() const { return "AStar"; }
+    void setObs(list<int> o){obs=o;}
+    void unsetObs(){obs.clear();}
 
 	SpaceTimeAStar(const Instance& instance, AgentID id):
 		SingleAgentSolver(instance, id) {}
@@ -89,6 +91,8 @@ private:
 	// define typedef for hash_map
 	typedef unordered_set<AStarNode*, AStarNode::NodeHasher, AStarNode::eqnode> hashtable_t;
 	hashtable_t allNodes_table;
+    list<int> obs;
+    bool isObs(int id) { return (!obs.empty()) && find(obs.begin(), obs.end(), id) == obs.end();}
 
 	// Updates the path datamember
 	void updatePath(const LLNode* goal, vector<PathEntry> &path);

@@ -1,15 +1,11 @@
-#include<boost/tokenizer.hpp>
-#include <algorithm>    // std::shuffle
-#include <random>      // std::default_random_engine
-#include <chrono>       // std::chrono::system_clock
 #include"Instance.h"
 
 int RANDOM_WALK_STEPS = 100000;
 
-Instance::Instance(const string& map_fname, const string& agent_fname, const string& human_fname,
+Instance::Instance(const string& map_fname, const string& agent_fname,
         int num_of_humans, int num_of_agents,
         int num_of_rows, int num_of_cols, int num_of_obstacles, int warehouse_width):
-    map_fname(map_fname), agent_fname(agent_fname), human_fname(human_fname),
+    map_fname(map_fname), agent_fname(agent_fname),
     num_of_humans(num_of_humans),num_of_agents(num_of_agents)
 {
     bool succ = loadMap();
@@ -29,6 +25,7 @@ Instance::Instance(const string& map_fname, const string& agent_fname, const str
     }
 
     succ = loadAgents();
+
     if (!succ)
     {
         if (num_of_agents > 0)
@@ -43,7 +40,6 @@ Instance::Instance(const string& map_fname, const string& agent_fname, const str
             exit(-1);
         }
     }
-    succ = loadHumans();
     printAgents(AgentType::ROBOT);
     printAgents(AgentType::HUMAN);
     //bool temp=isConnected(start_human[0], goal_human[0]);
@@ -352,6 +348,7 @@ bool Instance::loadAgents()
 {
     using namespace std;
     using namespace boost;
+    cout<<"loading agents"<<endl;
 
     string line;
     ifstream myfile (agent_fname.c_str());
@@ -369,26 +366,25 @@ bool Instance::loadAgents()
         start_agent.resize(num_of_agents);
         goal_agent.resize(num_of_agents);
         char_separator<char> sep("\t");
+
         for (int i = 0; i < num_of_agents; i++)
         {
             getline(myfile, line);
             tokenizer< char_separator<char> > tok(line, sep);
-            tokenizer< char_separator<char> >::iterator beg = tok.begin();
-            beg++; // skip the first number
-            beg++; // skip the map name
-            beg++; // skip the columns
-            beg++; // skip the rows
-                   // read start [row,col] for agent i
-            int col = atoi((*beg).c_str());
-            beg++;
-            int row = atoi((*beg).c_str());
-            start_agent[i] = linearizeCoordinate(row, col);
-            // read goal [row,col] for agent i
-            beg++;
-            col = atoi((*beg).c_str());
-            beg++;
-            row = atoi((*beg).c_str());
-            goal_agent[i] = linearizeCoordinate(row, col);
+            task t=line2task(tok);
+            start_agent[i]=t.first;
+            goal_agent[i]=t.second;
+        }
+
+        start_human.resize(num_of_humans);
+        goal_human.resize(num_of_humans);
+        for (int i = 0; i < num_of_humans; i++)
+        {
+            getline(myfile, line);
+            tokenizer< char_separator<char> > tok(line, sep);
+            task t=line2task(tok);
+            start_human[i]=t.first;
+            goal_human[i]=t.second;
         }
     }
     else // My benchmark
@@ -422,6 +418,31 @@ bool Instance::loadAgents()
     return true;
 }
 
+
+task Instance::line2task(boost::tokenizer< boost::char_separator<char> > tok)
+{
+    int start,goal;
+    boost::tokenizer< boost::char_separator<char> >::iterator beg = tok.begin();
+    beg++; // skip the first number
+    beg++; // skip the map name
+    beg++; // skip the columns
+    beg++; // skip the rows
+           // read start [row,col] for agent i
+    int col = atoi((*beg).c_str());
+    beg++;
+    int row = atoi((*beg).c_str());
+    start = linearizeCoordinate(row, col);
+    // read goal [row,col] for agent i
+    beg++;
+    col = atoi((*beg).c_str());
+    beg++;
+    row = atoi((*beg).c_str());
+    goal = linearizeCoordinate(row, col);
+    return {start,goal};
+
+
+}
+/*
 bool Instance::loadHumans()
 {
     using namespace std;
@@ -468,7 +489,7 @@ bool Instance::loadHumans()
     myfile.close();
     return true;
 }
-
+*/
 void Instance::printAgents(AgentType type) const
 {
     if (type==AgentType::ROBOT)
