@@ -102,6 +102,7 @@ public:
 	void clear(); // used for rapid random  restart
 
 	int getInitialPathLength(int agent) const {return (int) paths_found_initially[agent].size() - 1; }
+    void print_info() {cout<<"clean up list "<<cleanup_list.size()<<endl<<std::flush;}
 protected:
     bool rectangle_reasoning;  // using rectangle reasoning
 	bool corridor_reasoning;  // using corridor reasoning
@@ -189,7 +190,7 @@ private: // CBS only, cannot be used by ECBS
 	bool generateRoot();
 	bool findPathForSingleAgent(CBSNode*  node, int ag, int lower_bound = 0);
 	void classifyConflicts(CBSNode &parent);
-    bool validateHuman();
+    void validateHuman(CBSNode* node);
     bool validateHumanPath(const PathPool& Ps);
     int checkTermination(HLNode* curr);
 

@@ -13,6 +13,8 @@ MAHPF::MAHPF(const Instance& instance, double time_limit,
     humans.reserve(M);
     for (int i = 0; i < M; i++)
         humans.emplace_back(instance, AgentID(i,AgentType::HUMAN));
+
+
     time_limit=time_limit;
     cur_Soc=0;
     run_time=0;
@@ -27,7 +29,7 @@ bool MAHPF::getInitialSolution() {
         cout<<"path after return"<<endl;
         cout<<humans[0].path<<endl;
 
-        succ=runCBS();
+        succ=runCBS(true);
         if (screen>0)
         {
             cout<<"initial path"<<endl;
@@ -65,6 +67,7 @@ bool MAHPF::merge()
 
     if(merge_algo== "OPTIMAL")
     {
+        if (!mergeOPTIMAL()) return false;
         cout<<"start merging with OPTIMAL"<<endl;
     }
     // to be implemented
@@ -104,6 +107,11 @@ bool MAHPF::merge()
         return false;
     }
 
+    logPath("merged.log");
+    confAgents;
+    checkConflict(confAgents);
+    assert(confAgents.empty());
+
     final_sol.Soc=humans[0].path.size();
     for (Agent r:robots)
         final_sol.Soc+=r.path.size();
@@ -117,21 +125,18 @@ bool MAHPF::mergeStop()
     clock_t start = clock();
     for (int h=0;h<humans.size();h++)
     {
-        list<int> conf;
+        vector<int> conf;
         for (int r=0;r<robots.size();r++)
         {
             for (int t=0;t<humans[h].path.size();t++)
             {
                 int temp=robots[r].path_planner.start_location;
-                if (humans[h].path[t].location==temp)
-                {
                     conf.push_back(temp);
-                    break;
-                }
             }
         }
 
         humans[h].path_planner.setObs(conf);
+        path_table.reset();
         Path p=humans[h].path_planner.findOptimalPath(path_table);
         humans[h].path_planner.unsetObs();
 
@@ -171,7 +176,7 @@ bool MAHPF::mergeStop()
 
 bool MAHPF::mergeOPTIMAL()
 {
-
+    return runCBS(false);
 }
 bool MAHPF::mergeSubOPTIMAL(bool fix_human)
 {
@@ -319,8 +324,9 @@ bool MAHPF::runHuman()
     return true;
 }
 
-bool MAHPF::runCBS()
+bool MAHPF::runCBS(bool init)
 {
+    path_table.reset();
     if (screen >= 2)
         cout << "initing with CBS " << endl;
     vector<SingleAgentSolver*> search_engines;
@@ -343,20 +349,44 @@ bool MAHPF::runCBS()
     cbs.setNodeSelectionRule(node_selection::NODE_CONFLICTPAIRS);
     cbs.setSavingStats(false);
     cbs.setHighLevelSolver(high_level_solver_type::ASTAR, 1);
-    clock_t start = clock();
+    clock_t start;
+    if (init)
+        start = clock();
     bool succ = cbs.solve(time_limit-run_time, 0);
-    run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
+    if (init)
+    {
+        cout<<"finied inital search: " <<endl;
+        run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
+    }
 
+    if (init)
+    {
+        if (succ)
+        {
+            for (size_t i = 0; i < robots.size(); i++)
+            {
+                robots[i].path = *cbs.paths[i];
+                path_table.insertPath(robots[i].id, robots[i].path);
+            }
+        }
+        return succ;
+    }
+
+    //cbs.print_info();
+    start = clock();
+    cbs.injectHuman(&humans[0].path_planner);
+    succ = cbs.solve(time_limit-run_time, 0, MAX_COST, true);
+    run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
     if (succ)
     {
         for (size_t i = 0; i < robots.size(); i++)
         {
             robots[i].path = *cbs.paths[i];
-            path_table.insertPath(robots[i].id, robots[i].path);
         }
-        /*
-           if (sum_of_costs_lowerbound < 0)
-           sum_of_costs_lowerbound = cbs.getLowerBound();*/
+        //for (int h=0;h<humans.size();h++)
+        //{
+        humans[0].path=cbs.Ps_human;
+        //}
     }
     return succ;
 }
@@ -434,7 +464,7 @@ bool MAHPF::mergeSuperMCP()
     {
         for (int i=0;i<max_lim;i++)
         {
-            if (mergeMCP()) {cout<<"return A"<<endl;return true;}
+            if (mergeMCP()) {return true;}
             for (int t=h.path.size()-1;t>i-1;t--)
                 h.path[i]=h.path[i-1];
             list<AgentID> confAgents;
@@ -606,33 +636,33 @@ void MAHPF::logTrackerPath(string fn)
 
 void MAHPF::logStats(int n)
 {
-        if (n==0)
-        {
-            cout<<init_sol;
-            cout<<"init time"<<run_time<<endl;
-        }
-        else if (n==1)
-        {
-            cout<<final_sol;
-            cout<<"merge time"<<run_time<<endl;
-        }
-    }
-
-    void MAHPF::logExpStats(const string& statsFn, const string& map, const string& instance, int r, int h,
-            const string& initAlgo, const string& mergeAlgo)
+    if (n==0)
     {
-        std::ofstream file(statsFn, std::ios::app);
-
-        if (file.is_open()) {
-            file<<map<<", "<<instance<<", "<<r<<", "<<h<<", "<<run_time
-                <<", "<<initAlgo<<", "<<init_sol.makespan<<", "<<init_sol.Soc
-                <<", "<<init_conf
-                <<", "<<mergeAlgo<<", "<<final_sol.makespan<<", "<<final_sol.Soc
-                <<", "<<endl;
-            file.close();     // Close the file
-        } else {
-            std::cerr << "Error: Could not open file for appending." << std::endl;
-        }
-
+        cout<<init_sol;
+        cout<<"init time"<<run_time<<endl;
     }
+    else if (n==1)
+    {
+        cout<<final_sol;
+        cout<<"merge time"<<run_time<<endl;
+    }
+}
+
+void MAHPF::logExpStats(const string& statsFn, const string& map, const string& instance, int r, int h,
+        const string& initAlgo, const string& mergeAlgo)
+{
+    std::ofstream file(statsFn, std::ios::app);
+
+    if (file.is_open()) {
+        file<<map<<", "<<instance<<", "<<r<<", "<<h<<", "<<run_time
+            <<", "<<initAlgo<<", "<<init_sol.makespan<<", "<<init_sol.Soc
+            <<", "<<init_conf
+            <<", "<<mergeAlgo<<", "<<final_sol.makespan<<", "<<final_sol.Soc
+            <<", "<<endl;
+        file.close();     // Close the file
+    } else {
+        std::cerr << "Error: Could not open file for appending." << std::endl;
+    }
+
+}
 

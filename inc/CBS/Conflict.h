@@ -39,7 +39,7 @@ public:
 
     void humanVConflict(int a1, int a2, int v, int t)
     {
-        assert(a2>a1);
+        assert(a2==-1);
         constraint1.clear();
         constraint2.clear();
 		this->a1 = a1;
@@ -50,6 +50,7 @@ public:
 
 	void humanEConflict(int a1, int a2, int v1, int v2, int t)
 	{
+        assert(a2==-1);
         constraint1.clear();
         constraint2.clear();
 		this->a1 = a1;

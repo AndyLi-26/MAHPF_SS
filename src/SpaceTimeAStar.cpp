@@ -63,12 +63,23 @@ Path SpaceTimeAStar::findOptimalPath(const PathTable& path_table, SpaceTimeAStar
         if (obj==DIS)
             updateFocalList(); // update FOCAL if min f-val increased
         auto* curr = popNode(obj);
+
+        /*
+        if (obj==CONF)
+        {
+            cout<<"========================================="<<endl;
+            cout<<"poping: "<<curr->location<<"@"<<curr->timestep<< "with conf: "<<curr->num_of_conflicts<<endl;
+        }
+        */
         assert(curr->location >= 0);
         // check if the popped node is a goal
         if (curr->location == goal_location && // arrive at the goal location
-            !curr->wait_at_goal && // not wait at the goal location
-            curr->timestep >= holding_time) // the agent can hold the goal location afterward
+                !curr->wait_at_goal && // not wait at the goal location
+                curr->timestep >= holding_time) // the agent can hold the goal location afterward
         {
+
+            //if (obj==CONF)
+            //    cout<<"finished search"<<endl;
             updatePath(curr, path);
             break;
         }
@@ -77,7 +88,8 @@ Path SpaceTimeAStar::findOptimalPath(const PathTable& path_table, SpaceTimeAStar
         next_locations.emplace_back(curr->location);
         for (int next_location : next_locations)
         {
-            if (isObs(id)) continue;
+            int conf=0;
+            if (isObs(next_location)) continue;
             int next_timestep = curr->timestep + 1;
             if (path_table.makespan < next_timestep)
             { // now everything is static, so switch to space A* where we always use the same timestep
@@ -88,8 +100,19 @@ Path SpaceTimeAStar::findOptimalPath(const PathTable& path_table, SpaceTimeAStar
                 next_timestep--;
             }
 
+            /*
+            if (obj==CONF)
+            {
+                cout<<"successor: "<<next_location<<"@"<<next_timestep <<endl;
+            }
+            */
             if (path_table.constrained(curr->location, next_location, next_timestep))
-                continue;
+            {
+                if (obj==DIS)
+                    continue;
+                else if(obj==CONF)
+                    conf=1;
+            }
 
             // compute cost to next_id via curr node
             int next_g_val = curr->g_val + 1;
@@ -97,7 +120,7 @@ Path SpaceTimeAStar::findOptimalPath(const PathTable& path_table, SpaceTimeAStar
 
             // generate (maybe temporary) node
             auto next = new AStarNode(next_location, next_g_val, next_h_val,
-                                      curr, next_timestep, 0, false);
+                    curr, next_timestep, curr->num_of_conflicts+conf, false);
             if (next_location == goal_location && curr->location == goal_location)
                 next->wait_at_goal = true;
 
@@ -105,6 +128,12 @@ Path SpaceTimeAStar::findOptimalPath(const PathTable& path_table, SpaceTimeAStar
             auto it = allNodes_table.find(next);
             if (it == allNodes_table.end())
             {
+                /*
+                if (obj==CONF)
+                {
+                    cout<<"pushing to open: "<<next_location<<endl;
+                }
+                */
                 pushNode(next, obj);
                 allNodes_table.insert(next);
                 continue;
@@ -113,8 +142,8 @@ Path SpaceTimeAStar::findOptimalPath(const PathTable& path_table, SpaceTimeAStar
 
             auto existing_next = *it;
             if (existing_next->getFVal() > next->getFVal() || // if f-val decreased through this new path
-                (existing_next->getFVal() == next->getFVal() &&
-                 existing_next->num_of_conflicts > next->num_of_conflicts)) // or it remains the same but there's fewer conflicts
+                    (existing_next->getFVal() == next->getFVal() &&
+                     existing_next->num_of_conflicts > next->num_of_conflicts)) // or it remains the same but there's fewer conflicts
             {
                 if (!existing_next->in_openlist) // if its in the closed list (reopen)
                 {
@@ -152,6 +181,11 @@ Path SpaceTimeAStar::findOptimalPath(const PathTable& path_table, SpaceTimeAStar
                         if(existing_next->num_of_conflicts>next->num_of_conflicts ||
                                 (existing_next->num_of_conflicts==next->num_of_conflicts && existing_next->getFVal() > next_g_val+next_h_val))
                         {
+                            /*
+                            if (obj==CONF)
+                            {
+                                cout<<"relaxing to open: "<<next_location<<endl;
+                            }*/
                             existing_next->copy(*next);	// update existing node
                             conf_open_list.increase(existing_next->conf_open_handle);  // increase because f-val improved
                         }

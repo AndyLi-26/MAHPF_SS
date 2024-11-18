@@ -1,5 +1,5 @@
 import tkinter as tk
-import re,math
+import re,math,sys
 from agent import Agent
 
 PRT_PATH=False
@@ -42,40 +42,6 @@ class AnimationGenerator:
             for a in self.agents:
                 pos=a.getCoord(self.t)
                 self.canvas.coords(a.IDX["circle"],*pos)
-
-            '''
-            for i in range(len(self.human_path)):
-                if self.t>=len(self.human_path[i])-1:
-                    pos=self.coord2pos(*self.human_path[i][-1])
-                elif self.t==int(self.t):
-                    pos=self.coord2pos(*self.human_path[i][int(self.t)])
-                else:
-                    pos1=self.coord2pos(*self.human_path[i][int(self.t)])
-                    pos2=self.coord2pos(*self.human_path[i][int(self.t)+1])
-                    pos=self.shift_agent(pos1,pos2)
-                self.canvas.coords(self.humans[i][0],*pos)
-
-            for i in range(len(self.robot_path)):
-                if self.t>=len(self.robot_path[i])-1:
-                    pos=self.coord2pos(*self.robot_path[i][-1])
-                elif self.t==int(self.t):
-                    pos=self.coord2pos(*self.robot_path[i][int(self.t)])
-                else:
-                    pos1=self.coord2pos(*self.robot_path[i][int(self.t)])
-                    pos2=self.coord2pos(*self.robot_path[i][int(self.t)+1])
-                    pos=self.shift_agent(pos1,pos2)
-                self.canvas.coords(self.robots[i][0],*pos)
-            self.canvas.move(self.circle, self.dx, self.dy)
-
-            # Get the current position of the circle
-            x0, y0, x1, y1 = self.canvas.coords(self.circle)
-
-            # Check for collision with canvas boundaries
-            if x0 <= 0 or x1 >= self.canvas.winfo_width():
-                self.dx = -self.dx
-            if y0 <= 0 or y1 >= self.canvas.winfo_height():
-                self.dy = -self.dy
-            '''
 
         # Schedule the next frame
         self.root.after(self.inc, self.animate)  # 20 ms delay for each frame
@@ -153,34 +119,6 @@ class AnimationGenerator:
             a.setIDX({"circle":cir,"start":start,"end":end})
             #self.humans.append((agent_cir,"red"))
 
-        '''
-        self.humans=[]
-        for i in self.human_path:
-            s=i[0]
-            #a_color="red"
-            pos=self.coord2pos(*s)
-            agent_cir = self.canvas.create_oval(*pos, fill="red")
-            self.humans.append((agent_cir,"red"))
-            for e in i[1:]:
-                pos1=self.coord2center_pos(*s)
-                pos2=self.coord2center_pos(*e)
-                self.canvas.create_line(*pos1,*pos2, fill="red", width=2)
-                s=e
-
-        self.robots=[]
-        for i in self.robot_path:
-            s=i[0]
-            #a_color=temp.pop()
-            pos=self.coord2pos(*s)
-            agent_cir = self.canvas.create_oval(*pos, fill="blue")
-            self.robots.append((agent_cir,"blue"))
-            for e in i[1:]:
-                pos1=self.coord2center_pos(*s)
-                pos2=self.coord2center_pos(*e)
-                self.canvas.create_line(*pos1,*pos2, fill="blue", width=2)
-                s=e
-        '''
-
     def coord2center_pos(self,i,j):
         p=self.coord2pos(i,j)
         return (p[0]+p[2])/2, (p[1]+p[3])/2
@@ -191,13 +129,6 @@ class AnimationGenerator:
         x1 = x0 + self.cell_size
         y1 = y0 + self.cell_size
         return x0,y0,x1,y1
-
-    '''
-    def shift_agent(self,pos1,pos2):
-        shift_t=self.t-int(self.t)
-        pos=[(pos2[i]-pos1[i])*shift_t+pos1[i] for i in range(4)]
-        return pos
-    '''
 
     def create_star(self, center, c, p):
         outer_angle = 2 * math.pi / p  # Full circle divided by the number of points
@@ -217,6 +148,6 @@ class AnimationGenerator:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = AnimationGenerator(root, "../bench_mark/empty-8-8/map.map","init.log")
+    app = AnimationGenerator(root, sys.argv[1],sys.argv[2])
     root.mainloop()
 

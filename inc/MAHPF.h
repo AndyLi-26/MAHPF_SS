@@ -27,7 +27,7 @@ class MAHPF
     private:
         vector<Agent> robots;
         vector<Agent> humans;
-        bool runCBS();
+        bool runCBS(bool init);
         bool runHuman();
         bool mergeSuperMCP();
         bool mergeMCP();

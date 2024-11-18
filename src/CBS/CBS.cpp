@@ -58,7 +58,7 @@ void CBS::copyConflicts(const list<shared_ptr<Conflict >>& conflicts,
 		if (!found)
 		{
 			assert(!conflict->constraint1.empty());
-			assert(!conflict->constraint2.empty());
+			assert(!(conflict->type!=conflict_type::HUMAN_CONF && conflict->constraint2.empty()));
 			copy.push_back(conflict);
 		}
 	}
@@ -75,7 +75,11 @@ void CBS::findConflicts(HLNode& curr, int a1, int a2)
 		if (loc1 == loc2)
 		{
 			shared_ptr<Conflict> conflict(new Conflict());
-			if (target_reasoning && paths[a1]->size() == timestep + 1)
+            if (a1==num_of_agents || a2==num_of_agents)
+            {
+                conflict->humanVConflict(min(a1,a2), -1, loc1, timestep);
+            }
+            else if (target_reasoning && paths[a1]->size() == timestep + 1)
 			{
 				conflict->targetConflict(a1, a2, loc1, timestep);
 			}
@@ -85,10 +89,10 @@ void CBS::findConflicts(HLNode& curr, int a1, int a2)
 			}
 			else
 			{
-				conflict->vertexConflict(a1, a2, loc1, timestep);
-			}
+                conflict->vertexConflict(a1, a2, loc1, timestep);
+            }
 			assert(!conflict->constraint1.empty());
-			assert(!conflict->constraint2.empty());
+			assert(!(conflict->type!=conflict_type::HUMAN_CONF && conflict->constraint2.empty()));
 			curr.unknownConf.push_back(conflict);
 		}
 		else if (timestep < min_path_length - 1
@@ -96,9 +100,12 @@ void CBS::findConflicts(HLNode& curr, int a1, int a2)
 			&& loc2 == paths[a1]->at(timestep + 1).location)
 		{
 			shared_ptr<Conflict> conflict(new Conflict());
-			conflict->edgeConflict(a1, a2, loc1, loc2, timestep + 1);
+            if (a1==num_of_agents || a2==num_of_agents)
+                conflict->humanEConflict(min(a1,a2), -1, loc1, loc2, timestep + 1);
+            else
+                conflict->edgeConflict(a1, a2, loc1, loc2, timestep + 1);
 			assert(!conflict->constraint1.empty());
-			assert(!conflict->constraint2.empty());
+			assert(!(conflict->type!=conflict_type::HUMAN_CONF && conflict->constraint2.empty()));
 			curr.unknownConf.push_back(conflict); // edge conflict
 		}
 	}
@@ -113,18 +120,19 @@ void CBS::findConflicts(HLNode& curr, int a1, int a2)
 			if (loc1 == loc2)
 			{
 				shared_ptr<Conflict> conflict(new Conflict());
-				if (target_reasoning)
+                if(a1==num_of_agents || a2==num_of_agents)
+                    conflict->humanVConflict(min(a1,a2), -1, loc1, timestep);
+                else if (target_reasoning )
 					conflict->targetConflict(a1_, a2_, loc1, timestep);
 				else
 					conflict->vertexConflict(a1_, a2_, loc1, timestep);
 				assert(!conflict->constraint1.empty());
-				assert(!conflict->constraint2.empty());
+                assert(!(conflict->type!=conflict_type::HUMAN_CONF && conflict->constraint2.empty()));
 				curr.unknownConf.push_front(conflict); // It's at least a semi conflict
 			}
 		}
 	}
 }
-
 
 void CBS::findConflicts(HLNode& curr)
 {
@@ -320,7 +328,8 @@ void CBS::classifyConflicts(CBSNode &node)
 		//tie(a, loc1, loc2, timestep, type) = con->constraint1.back();
 		node.unknownConf.pop_front();
 
-        if (con->type==conflict_type::HUMAN_CONF)
+        //if (con->type==conflict_type::HUMAN_CONF)
+        if (con->type==HUMAN_CONF)
         {
 			node.conflicts.push_back(con);
             return;
@@ -470,7 +479,7 @@ bool CBS::generateChild(CBSNode*  node, CBSNode* parent)
 	node->depth = parent->depth + 1;
 
     // human side of the human conflict, skip
-    if (parent->conflict->type==conflict_type::HUMAN_CONF && node->constraints.empty())
+    if ((parent->conflict->type==HUMAN_CONF) && node->constraints.empty())
         return false;
 	set<int> agents = getInvalidAgents(node->constraints);
 	assert(!agents.empty());
@@ -494,6 +503,8 @@ bool CBS::generateChild(CBSNode*  node, CBSNode* parent)
 
     if (node->conflicts.empty() && node->unknownConf.empty())
     {
+        validateHuman(node);
+        /*
         PathTable PT(path_table.table.size());
         for (int i=0;i<num_of_agents;i++)
         {
@@ -508,6 +519,7 @@ bool CBS::generateChild(CBSNode*  node, CBSNode* parent)
         for (int a2 = 0; a2 < num_of_agents; a2++)
             findConflicts(*node, num_of_agents, a2);
         paths.pop_back();
+        */
 
     }
     runtime_generate_child += (double)(clock() - t1) / CLOCKS_PER_SEC;
@@ -1131,8 +1143,9 @@ void CBS::injectHuman(SpaceTimeAStar* h)
     h_solver=h;
 }
 
-bool CBS::validateHuman()
+void CBS::validateHuman(CBSNode* node)
 {
+    /*
     PathTable PT(path_table.table.size());
     for (int i=0;i<num_of_agents;i++)
     {
@@ -1141,7 +1154,24 @@ bool CBS::validateHuman()
     }
     //Path new_path;
     Path new_path=h_solver->findOptimalPath(PT, SpaceTimeAStar::Cost::CONF);
+    Ps_human=new_path;*/
+
+    PathTable PT(search_engines[0]->instance.map_size);
+    for (int i=0;i<num_of_agents;i++)
+    {
+        assert(!(paths[i]->empty()));
+        PT.insertPath({i,AgentType::ROBOT},(*paths[i]));
+    }
+    //Path new_path;
+    Path new_path=h_solver->findOptimalPath(PT, SpaceTimeAStar::Cost::CONF);
+    assert (!new_path.empty());
     Ps_human=new_path;
+
+    paths.push_back(&Ps_human);
+    for (int a2 = 0; a2 < num_of_agents; a2++)
+        findConflicts(*node, num_of_agents, a2);
+    paths.pop_back();
+
 
     /*
     //get all paths from each mdd
@@ -1149,10 +1179,10 @@ bool CBS::validateHuman()
     allPs.resize(num_of_agents);
     for (int i=0;i<num_of_agents;i++)
     {
-        MDD *mdd1 = nullptr;
-		mdd1 = mdd_helper.getMDD(curr, i, paths[i]->size());
-        Paths tmp=mdd1->getAllPaths(paths[i]->size());
-        allPs[i]=PathPool(tmp.begin(), tmp.end());
+    MDD *mdd1 = nullptr;
+    mdd1 = mdd_helper.getMDD(curr, i, paths[i]->size());
+    Paths tmp=mdd1->getAllPaths(paths[i]->size());
+    allPs[i]=PathPool(tmp.begin(), tmp.end());
     }
 
     //from paths to all permutations
@@ -1162,18 +1192,18 @@ bool CBS::validateHuman()
 
     while(1)
     {
-        for (int i = 0; i < num_of_agents; i++) {
-            Ps[i]=allPs[i][idx[i]];
-        }
-        if (validateHumanPath(Ps)) return true;
+    for (int i = 0; i < num_of_agents; i++) {
+    Ps[i]=allPs[i][idx[i]];
+    }
+    if (validateHumanPath(Ps)) return true;
 
-        int i = num_of_agents - 1;
-        while (i >= 0 && ++idx[i] == allPs[i].size()) {
-            idx[i] = 0;
-            i--;
-        }
+    int i = num_of_agents - 1;
+    while (i >= 0 && ++idx[i] == allPs[i].size()) {
+    idx[i] = 0;
+    i--;
+    }
 
-        if (i < 0) return false;
+    if (i < 0) return false;
     }
     */
 }
@@ -1250,9 +1280,16 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
 
     if(solution_found) // continue searching
     {
-        goal_node = nullptr;
+        //goal_node = nullptr;
         solution_found = false;
         solution_cost = -2;
+        if (toResume)
+        {
+            solving_human=true;
+            validateHuman(goal_node);
+            reinsertNode(goal_node);
+            goal_node = nullptr;
+        }
     }
     else if(!generateRoot())
         return false;
@@ -1271,6 +1308,11 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
            return solution_found;
            }
            */
+
+        if (solving_human && curr->conflicts.empty() && curr->unknownConf.empty()) //no conflict_selection
+        {
+            validateHuman(curr);
+        }
 
         int flag=checkTermination(curr);
         if (flag==-1)

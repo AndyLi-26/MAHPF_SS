@@ -2,7 +2,6 @@
 #include "SingleAgentSolver.h"
 #include "PathTable.h"
 
-
 class AStarNode: public LLNode
 {
 public:
@@ -48,7 +47,6 @@ public:
 	};
 };
 
-
 class SpaceTimeAStar: public SingleAgentSolver
 {
 public:
@@ -74,7 +72,7 @@ public:
 	int getTravelTime(int start, int end, const ConstraintTable& constraint_table, int upper_bound);
 
 	string getName() const { return "AStar"; }
-    void setObs(list<int> o){obs=o;}
+    void setObs(vector<int> o){obs=o;}
     void unsetObs(){obs.clear();}
 
 	SpaceTimeAStar(const Instance& instance, AgentID id):
@@ -91,8 +89,8 @@ private:
 	// define typedef for hash_map
 	typedef unordered_set<AStarNode*, AStarNode::NodeHasher, AStarNode::eqnode> hashtable_t;
 	hashtable_t allNodes_table;
-    list<int> obs;
-    bool isObs(int id) { return (!obs.empty()) && find(obs.begin(), obs.end(), id) == obs.end();}
+    vector<int> obs;
+    bool isObs(int id) { return (!obs.empty() && find(obs.begin(), obs.end(), id) != obs.end());}
 
 	// Updates the path datamember
 	void updatePath(const LLNode* goal, vector<PathEntry> &path);
