@@ -74,12 +74,12 @@ bool MAHPF::merge()
     else if(merge_algo== "Sub-OPTIMAL")
     {
         cout<<"start merging with Sub-OPTIMAL"<<endl;
-        mergeSubOPTIMAL(false);
+        if (!mergeSubOPTIMAL(false)) return false;
     }
     else if(merge_algo== "Sub-OPTIMAL-P1")
     {
         cout<<"start merging with Sub-OPTIMAL-P1"<<endl;
-        mergeSubOPTIMAL(true);
+        if (!mergeSubOPTIMAL(true)) return false;
     }
     else if(merge_algo== "superMCP")
     {
@@ -108,10 +108,18 @@ bool MAHPF::merge()
     }
 
     logPath("merged.log");
-    confAgents;
     checkConflict(confAgents);
-    assert(confAgents.empty());
-
+    if (!confAgents.empty())
+    {
+        cout<<"=========================================================== ";
+        cout<<"confAgents: ";
+        for (AgentID id:confAgents)
+            cout<<id<<", ";
+        cout<<endl;
+        cout<<"conflicting path"<<endl;
+        printPathsA();
+        assert(false);
+    }
     final_sol.Soc=humans[0].path.size();
     for (Agent r:robots)
         final_sol.Soc+=r.path.size();
@@ -180,7 +188,7 @@ bool MAHPF::mergeOPTIMAL()
 }
 bool MAHPF::mergeSubOPTIMAL(bool fix_human)
 {
-    mergePP(fix_human);
+    return mergePP(fix_human);
 }
 
 bool MAHPF::mergePush()
@@ -202,14 +210,19 @@ bool MAHPF::mergePP(bool fix_human)
 {
     clock_t start = clock();
     double loop_time=0;
+    list<AgentID> failedAgents;
     if (!fix_human)
     {
         Path p=humans[0].path_planner.findOptimalPath(path_table,SpaceTimeAStar::Cost::CONF);
         if (!p.empty())
         {
-            humans[0].path=p;
-            run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
-            return true;
+            checkConflict(failedAgents);
+            if (failedAgents.empty())
+            {
+                humans[0].path=p;
+                run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
+                return true;
+            }
         }
     }
     if (screen>0)
@@ -218,7 +231,6 @@ bool MAHPF::mergePP(bool fix_human)
         printPathsA();
     }
 
-    list<AgentID> failedAgents;
     checkConflict(failedAgents);
     for (AgentID id:failedAgents)
         path_table.deletePath(id,robots[id.id].path);
@@ -242,7 +254,6 @@ bool MAHPF::mergePP(bool fix_human)
         while(loop_time+run_time<time_limit && fail)
         {
             loop_time = (double)(clock() - start_loop) / CLOCKS_PER_SEC;
-            cout<<"printing here"<<endl;
             bool succ;
             std::random_shuffle(idx_in.begin(), idx_in.end());
             std::random_shuffle(idx_out.begin(), idx_out.end());
@@ -257,7 +268,6 @@ bool MAHPF::mergePP(bool fix_human)
             fail=false;
             for (int id:idx_in)
             {
-                cout<<"id: "<<id<<endl;
                 Path p=robots[id].path_planner.findOptimalPath(path_table);
                 if (!p.empty())
                 {
@@ -284,13 +294,17 @@ bool MAHPF::mergePP(bool fix_human)
             if (!p.empty())
             {
                 humans[0].path=p;
-                if (screen>0)
+                checkConflict(failedAgents);
+                if (failedAgents.empty())
                 {
-                    cout<<"finished fixing"<<endl;
-                    printPathsA();
+                    if (screen>0)
+                    {
+                        cout<<"finished fixing"<<endl;
+                        printPathsA();
+                    }
+                    run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
+                    return true;
                 }
-                run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
-                return true;
             }
         }
 
@@ -304,6 +318,7 @@ bool MAHPF::mergePP(bool fix_human)
         }
 
     }
+    return false;
 }
 
 bool MAHPF::runHuman()
