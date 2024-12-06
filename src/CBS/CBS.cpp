@@ -67,6 +67,7 @@ void CBS::copyConflicts(const list<shared_ptr<Conflict >>& conflicts,
 
 void CBS::findConflicts(HLNode& curr, int a1, int a2)
 {
+    assert(a1!=num_of_agents);
 	int min_path_length = (int) (paths[a1]->size() < paths[a2]->size() ? paths[a1]->size() : paths[a2]->size());
 	for (int timestep = 0; timestep < min_path_length; timestep++)
 	{
@@ -75,9 +76,9 @@ void CBS::findConflicts(HLNode& curr, int a1, int a2)
 		if (loc1 == loc2)
 		{
 			shared_ptr<Conflict> conflict(new Conflict());
-            if (a1==num_of_agents || a2==num_of_agents)
+            if (a2==num_of_agents)
             {
-                conflict->humanVConflict(min(a1,a2), -1, loc1, timestep);
+                conflict->humanVConflict(a1, -1, loc1, timestep);
             }
             else if (target_reasoning && paths[a1]->size() == timestep + 1)
 			{
@@ -100,8 +101,8 @@ void CBS::findConflicts(HLNode& curr, int a1, int a2)
 			&& loc2 == paths[a1]->at(timestep + 1).location)
 		{
 			shared_ptr<Conflict> conflict(new Conflict());
-            if (a1==num_of_agents || a2==num_of_agents)
-                conflict->humanEConflict(min(a1,a2), -1, loc1, loc2, timestep + 1);
+            if (a2==num_of_agents)
+                conflict->humanEConflict(a1, -1, loc1, loc2, timestep + 1);
             else
                 conflict->edgeConflict(a1, a2, loc1, loc2, timestep + 1);
 			assert(!conflict->constraint1.empty());
@@ -120,8 +121,8 @@ void CBS::findConflicts(HLNode& curr, int a1, int a2)
 			if (loc1 == loc2)
 			{
 				shared_ptr<Conflict> conflict(new Conflict());
-                if(a1==num_of_agents || a2==num_of_agents)
-                    conflict->humanVConflict(min(a1,a2), -1, loc1, timestep);
+                if(a2==num_of_agents)
+                    conflict->humanVConflict(a1, -1, loc1, timestep);
                 else if (target_reasoning )
 					conflict->targetConflict(a1_, a2_, loc1, timestep);
 				else
@@ -456,6 +457,15 @@ bool CBS::findPathForSingleAgent(CBSNode*  node, int ag, int lowerbound)
 	runtime_path_finding += (double)(clock() - t) / CLOCKS_PER_SEC;
 	if (!new_path.empty())
 	{
+        if(isSamePath(*paths[ag], new_path))
+        {
+            if (node->parent->conflict->type==HUMAN_CONF)
+            {
+                cout<<"is human conf"<<endl;
+                cout<<(node->constraints.size()) <<": "<<(node->constraints.front())<<endl;
+            }
+            cout<<"ag: "<<ag<<endl;
+        }
 		assert(!isSamePath(*paths[ag], new_path));
 		node->paths.emplace_back(ag, new_path);
 		node->g_val = node->g_val - (int)paths[ag]->size() + (int)new_path.size();
@@ -1168,8 +1178,8 @@ void CBS::validateHuman(CBSNode* node)
     Ps_human=new_path;
 
     paths.push_back(&Ps_human);
-    for (int a2 = 0; a2 < num_of_agents; a2++)
-        findConflicts(*node, num_of_agents, a2);
+    for (int a1 = 0; a1 < num_of_agents; a1++)
+        findConflicts(*node, a1, num_of_agents);
     paths.pop_back();
 
 

@@ -1,6 +1,30 @@
-import subprocess, os,glob, time,json,sys
+import subprocess, os,glob, time,json,sys,requests
+myServer="https://discord.com/api/webhooks/1278892307898437713/iXMJH98zmKUt6DGmoEM8xdX5ijBtx-bJE5b_pk5jC98RrY3iRaixhWS3vvbAZASqiE7k"
 N=int(sys.argv[2])
 processPool=[]
+def send(payload):
+    response = requests.post(myServer, json=payload)
+    if response.ok:
+        print("Message sent successfully!")
+    else:
+        print(f"Failed to send message: {response.status_code} - {response.text}")
+
+def sendError():
+    print("error")
+    payload = {
+    #"payload_json": '{"content":"BUG!!!!!!!!!!!!!!!!! FUCK YOU!!!!!!!!!"}'
+    "content":"BUG!!!!!!!!!!!!!!!!! FUCK YOU!!!!!!!!!"
+    }
+    send(payload)
+
+def sendFinish():
+    print("finished")
+    payload = {
+    #"payload_json": '{"content":"Experiement finished without bug, hopefully"}'
+    "content":"Experiement finished without bug, hopefully"
+    }
+    send(payload)
+
 def remove_first_line(input_file, output_file):
     # Check if the input file is not empty
     try:
@@ -39,6 +63,7 @@ for data in CMDPOOL:
                 result=processPool[p].poll()
                 if result is not None:
                     if result!=0:
+                        sendError()
                         print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                         print(processPool[p].args)
                         print(processPool[p].stderr)
@@ -56,6 +81,7 @@ for data in CMDPOOL:
                 if result is not None:
                     print("result",result)
                     if result!=0:
+                        sendError()
                         print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                         print(processPool[p])
                         print(processPool[p].args)
@@ -73,4 +99,4 @@ for data in CMDPOOL:
     #data=remove_first_line('./errors.txt', './errors.txt')
 
 
-
+sendFinish()
