@@ -88,7 +88,7 @@ class LNS
         int neighbor_size;
         int num_of_iterations;
 
-        high_resolution_clock::time_point start_time;
+        std::chrono::_V2::steady_clock::time_point start_time;
 
 
         PathTable path_table; // 1. stores the paths of all agents in a time-space table;
