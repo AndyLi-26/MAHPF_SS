@@ -473,21 +473,24 @@ bool MAHPF::mergeMCP()
 bool MAHPF::mergeSuperMCP()
 {
     cout<<"starting super merge"<<endl;
-    clock_t start = clock();
+    //clock_t start = clock();
     int max_lim=path_table.makespan;
-    for (Agent h : humans)
+    for (int h=0;h<humans.size();h++)
     {
         for (int i=0;i<max_lim;i++)
         {
             if (mergeMCP()) {return true;}
-            for (int t=h.path.size()-1;t>i-1;t--)
-                h.path[i]=h.path[i-1];
+            if (run_time>time_limit) return false;
+            for (int t=humans[h].path.size()-1;t>i;t--)
+            {
+                humans[h].path[t]=humans[h].path[t-1];
+            }
             list<AgentID> confAgents;
             checkConflict(confAgents);
             if (confAgents.empty()) {cout<<"return B"<<endl;return true;}
         }
     }
-    run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
+    //run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
     return true;
 }
 
