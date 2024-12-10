@@ -119,6 +119,7 @@ bool MAHPF::merge()
         cout<<"conflicting path"<<endl;
         printPathsA();
         assert(false);
+        return false;
     }
     final_sol.Soc=humans[0].path.size();
     for (Agent r:robots)
@@ -480,6 +481,7 @@ bool MAHPF::mergeSuperMCP()
         for (int i=0;i<max_lim;i++)
         {
             if (mergeMCP()) {return true;}
+            humans[h].path.resize(humans[h].path.size()+1);
             if (run_time>time_limit) return false;
             for (int t=humans[h].path.size()-1;t>i;t--)
             {
