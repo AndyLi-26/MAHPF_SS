@@ -216,7 +216,6 @@ shared_ptr<Conflict> CBS::chooseConflict(const HLNode &node) const
 	return choose;
 }
 
-
 void CBS::computeSecondPriorityForConflict(Conflict& conflict, const HLNode& node)
 {
 	int count[2] = {0, 0};
@@ -504,6 +503,7 @@ bool CBS::generateChild(CBSNode*  node, CBSNode* parent)
 	}
 
 	findConflicts(*node);
+    /*
     if (!solving_human)
     {
         heuristic_helper.computeQuickHeuristics(*node);
@@ -513,7 +513,7 @@ bool CBS::generateChild(CBSNode*  node, CBSNode* parent)
 
     if (node->conflicts.empty() && node->unknownConf.empty())
     {
-        validateHuman(node);
+        solveHuman(node);
         /*
         PathTable PT(path_table.table.size());
         for (int i=0;i<num_of_agents;i++)
@@ -529,9 +529,9 @@ bool CBS::generateChild(CBSNode*  node, CBSNode* parent)
         for (int a2 = 0; a2 < num_of_agents; a2++)
             findConflicts(*node, num_of_agents, a2);
         paths.pop_back();
-        */
 
     }
+        */
     runtime_generate_child += (double)(clock() - t1) / CLOCKS_PER_SEC;
     return true;
 }
@@ -1153,7 +1153,7 @@ void CBS::injectHuman(SpaceTimeAStar* h)
     h_solver=h;
 }
 
-void CBS::validateHuman(CBSNode* node)
+void CBS::solveHuman(CBSNode* node)
 {
     /*
     PathTable PT(path_table.table.size());
@@ -1218,6 +1218,28 @@ void CBS::validateHuman(CBSNode* node)
     */
 }
 
+bool CBS::validateHumanPath(CBSNode* node)
+{
+    PathTable PT(search_engines[0]->instance.map_size);
+    for (int i=0;i<num_of_agents;i++)
+    {
+        assert(!(paths[i]->empty()));
+        PT.insertPath({i,AgentType::ROBOT},(*paths[i]));
+    }
+    //Path new_path;
+    Path new_path=h_solver->findOptimalPath(PT, SpaceTimeAStar::Cost::CONF);
+
+    if (new_path.empty())
+        return false;
+
+    Ps_human=new_path;
+    return true;
+
+    //paths.push_back(&Ps_human);
+    //paths.pop_back();
+
+}
+
 bool CBS::validateHumanPath(const PathPool& Ps)
 {
     PathTable PT(path_table.table.size());
@@ -1233,7 +1255,8 @@ bool CBS::validateHumanPath(const PathPool& Ps)
     return true;
 }
 
-int CBS::checkTermination(HLNode* curr) //-1: timeout, 0: dont terminate, 1: found solution 2: found solution for robots
+int CBS::checkTermination(HLNode* curr)
+//-1: timeout, 0: dont terminate, 1: found solution 2: found solution for robots
 {
     if (!terminate(curr)) return 0;
     if (solution_found) return 1;
@@ -1250,7 +1273,7 @@ int CBS::checkTermination(HLNode* curr) //-1: timeout, 0: dont terminate, 1: fou
     if (!solution_found) return 0; //solving human, but there is conflict within the robots
 
     //check whether there is a conflict to human
-    bool flag=validateHuman();
+    bool flag=solveHuman();
     if (flag) return 1;
     else return 2;
     */
@@ -1287,6 +1310,7 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
     }
     // set timer
     start = clock();
+    bool solving_human;
 
     if(solution_found) // continue searching
     {
@@ -1296,8 +1320,9 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
         if (toResume)
         {
             solving_human=true;
-            validateHuman(goal_node);
-            reinsertNode(goal_node);
+            if (validateHumanPath(goal_node))
+                return true;
+            //reinsertNode(goal_node);
             goal_node = nullptr;
         }
     }
@@ -1317,18 +1342,28 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
            goal_node = curr;
            return solution_found;
            }
-           */
 
         if (solving_human && curr->conflicts.empty() && curr->unknownConf.empty()) //no conflict_selection
         {
-            validateHuman(curr);
+            solveHuman(curr);
         }
+        */
 
         int flag=checkTermination(curr);
         if (flag==-1)
             return solution_found;
         else if (flag==1) {
-            goal_node=curr;
+            if (solving_human)
+            {
+                if (validateHumanPath(curr))
+                {
+                    goal_node=curr;
+                    return solution_found;
+                }
+                curr->clear();
+                continue;
+
+            }
             return solution_found;
         }
 

@@ -44,7 +44,6 @@ public:
 	//HLNode* goal_node = nullptr;
 
 	bool solution_found = false;
-    bool solving_human = false;
 	int solution_cost = -2;
 	vector<Path*> paths;
     SpaceTimeAStar* h_solver;
@@ -190,9 +189,10 @@ private: // CBS only, cannot be used by ECBS
 	bool generateRoot();
 	bool findPathForSingleAgent(CBSNode*  node, int ag, int lower_bound = 0);
 	void classifyConflicts(CBSNode &parent);
-    void validateHuman(CBSNode* node);
+    void solveHuman(CBSNode* node);
     bool validateHumanPath(const PathPool& Ps);
     int checkTermination(HLNode* curr);
+    bool validateHumanPath(CBSNode* node);
 
 	void printPaths() const;
 };

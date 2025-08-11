@@ -50,7 +50,7 @@ exit()
 def sanityCheck(l):
     print(l)
     assert len(l)==6
-    #return min(l)==l[-1]
+    return min(l)==l[-1]
 
     for i in range(len(l)-1):
         if l[i] and l[i+1]:

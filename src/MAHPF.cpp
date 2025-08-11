@@ -107,7 +107,11 @@ bool MAHPF::merge()
         return false;
     }
 
-    logPath("merged.log");
+    if (logP)
+    {
+     logPath("merged.log");
+
+    }
     checkConflict(confAgents);
     if (!confAgents.empty())
     {
@@ -481,8 +485,8 @@ bool MAHPF::mergeSuperMCP()
         for (int i=0;i<max_lim;i++)
         {
             if (mergeMCP()) {return true;}
-            humans[h].path.resize(humans[h].path.size()+1);
             if (run_time>time_limit) return false;
+            humans[h].path.resize(humans[h].path.size()+1);
             for (int t=humans[h].path.size()-1;t>i;t--)
             {
                 humans[h].path[t]=humans[h].path[t-1];
@@ -493,7 +497,7 @@ bool MAHPF::mergeSuperMCP()
         }
     }
     //run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
-    return true;
+    return false;
 }
 
 int MAHPF::intersect(int t, int loc, PathPool& P){

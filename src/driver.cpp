@@ -23,6 +23,7 @@ int main(int argc, char** argv)
 		("robotNum,r", po::value<int>()->default_value(0), "number of agents")
 		("humanNum,h", po::value<int>()->default_value(1), "number of human")
         ("output,o", po::value<string>(), "output file")
+        ("logP", "log file")
 		("cutoffTime,t", po::value<double>()->default_value(7200), "cutoff time (seconds)")
 		("screen,s", po::value<int>()->default_value(0),
 		        "screen option (0: none; 1: LNS results; 2:LNS detailed results; 3: MAPF detailed results)")
@@ -73,16 +74,27 @@ int main(int argc, char** argv)
 	srand(0);
     string initAlgo=vm["initAlgo"].as<string>(),mergeAlgo=vm["mergeAlgo"].as<string>();
     MAHPF mahpf(instance, time_limit, initAlgo, mergeAlgo, screen);
+
+    bool logging;
+    if (vm.count("logP"))
+        logging=true;
+
     if (mahpf.getInitialSolution())
     {
         mahpf.logStats(0);
-        //mahpf.logPath("init.log");
-        //mahpf.logTrackerPath("init_path.csv");
+        if(logging)
+        {
+            mahpf.logPath("init.log");
+            //mahpf.logTrackerPath("init_path.csv");
+        }
         if (mahpf.merge())
         {
             cout<<"successfully merged"<<endl;
             mahpf.logStats(1);
-            //mahpf.logPath("merged.log");
+            if(logging)
+            {
+                mahpf.logPath("merged.log");
+            }
             //mahpf.logTrackerPath("final_path.csv");
         }
         else {
