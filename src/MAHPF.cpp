@@ -411,26 +411,58 @@ bool MAHPF::runCBS(bool init)
     return succ;
 }
 
+bool MAHPF::haveConflict(Path& p1, Path& p2)
+{
+    assert (p1.size() !=0 && p2.size() !=0);
+    int min_len=p1.size();
+
+    for (int t=0;t<min_len;t++)
+    {
+        int l1=p1.at(t).location;
+        int l2=p2.at(t).location;
+        if (l1==l2) return true;
+		else if (t < min_len - 1
+			&& l1 == p2.at(t + 1).location
+			&& l2 == p1.at(t + 1).location)
+            return true;
+    }
+	if (p1.size() == p2.size()) return false;
+
+    int l1=p1.back().location;
+    for (int t=min_len; t<(int)p2.size(); t++)
+    {
+        int l2=p2.at(t).location;
+        if (l1==l2) return true;
+    }
+    return false;
+}
+
 void MAHPF::checkConflict(list<AgentID> &confAgents)
 {
     confAgents.clear();
     for (Agent h : humans)
     {
-        for (int t=0;t<h.path.size();t++)
+        //AgentID confAgent(-1,AgentType::NONE);
+        for (Agent r:robots)
         {
-            AgentID confAgent(-1,AgentType::NONE);
-            for (Agent r:robots)
-                if (t<r.path.size() && r.path[t].location==h.path[t].location)
-                {
-                    confAgent.id=r.id.id;
-                    confAgent.type=r.id.type;
-                    break;
-                }
-            if (confAgent && find(confAgents.begin(),confAgents.end(),confAgent)==confAgents.end())
+            if (h.path.size()>r.path.size())
             {
-                confAgents.push_back(confAgent);
+                if(haveConflict(r.path,h.path))
+                    confAgents.push_back(r.id);
             }
+            else
+                confAgents.push_back(r.id);
+            /*
+               if (t<r.path.size() && r.path[t].location==h.path[t].location)
+               {
+               confAgent.id=r.id.id;
+               confAgent.type=r.id.type;
+               break;
+               }*/
         }
+        /*
+        if (confAgent && find(confAgents.begin(),confAgents.end(),confAgent)==confAgents.end())
+        */
     }
 }
 

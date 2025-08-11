@@ -38,6 +38,7 @@ class MAHPF
         bool mergeOPTIMAL();
         int intersect(int t, int loc, PathPool& P);
         void checkConflict(list<AgentID> &confAgents);
+        bool haveConflict(Path& p1, Path& p2);
         bool delayAgents(int t, PathPool &P);
         string init_algo_name;
         string merge_algo;
