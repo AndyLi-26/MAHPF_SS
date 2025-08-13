@@ -399,9 +399,7 @@ bool MAHPF::runCBS(bool init)
     //cbs.print_info();
     start = clock();
     cbs.injectHuman(&humans[0].path_planner);
-    cout<<"starting new cbs herereree!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl<<fflush;
     succ = cbs.solve(time_limit-run_time, 0, MAX_COST, true);
-    cout<<"succ flag: "<<succ<<endl;
     run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
     if (succ)
     {
@@ -426,6 +424,7 @@ bool MAHPF::haveConflict(Path& p1, Path& p2)
     {
         int l1=p1.at(t).location;
         int l2=p2.at(t).location;
+        //cout<<"t: "<<t<<" l1: "<<l1<<" l2: "<<l2<<endl;
         if (l1==l2) return true;
 		else if (t < min_len - 1
 			&& l1 == p2.at(t + 1).location
@@ -453,11 +452,15 @@ void MAHPF::checkConflict(list<AgentID> &confAgents)
         {
             if (h.path.size()>r.path.size())
             {
+                //cout<<"checking against: "<<h.id<<" and "<<r.id<<endl;
                 if(haveConflict(r.path,h.path))
                     confAgents.push_back(r.id);
             }
             else
-                confAgents.push_back(r.id);
+            {
+                if(haveConflict(h.path,r.path))
+                    confAgents.push_back(r.id);
+            }
             /*
                if (t<r.path.size() && r.path[t].location==h.path[t].location)
                {

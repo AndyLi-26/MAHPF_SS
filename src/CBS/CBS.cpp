@@ -1302,7 +1302,7 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
     this->cost_upperbound = _cost_upperbound;
     this->time_limit = _time_limit;
 
-    cout<<"starting CBS"<<endl<<fflush;
+    //cout<<"starting CBS"<<endl<<fflush;
     if (screen > 0) // 1 or 2
     {
         string name = getSolverName();
@@ -1320,11 +1320,11 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
         solution_cost = -2;
         if (toResume)
         {
-            cout<<"herer!!!!!!!!!!!!!!!!"<<endl<<fflush;
+            //cout<<"herer!!!!!!!!!!!!!!!!"<<endl<<fflush;
             solving_human=true;
             if (validateHumanPath(goal_node))
             {
-                cout<<"got herer!!!!!!!!!!!!!!!!"<<endl<<fflush;
+                //cout<<"got herer!!!!!!!!!!!!!!!!"<<endl<<fflush;
                 return true;
             }
             //reinsertNode(goal_node);
@@ -1334,7 +1334,7 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
     else if(!generateRoot())
         return false;
 
-    cout<<"entering the loop for CBS"<<endl<<fflush;
+    //cout<<"entering the loop for CBS"<<endl<<fflush;
     while (!cleanup_list.empty() && !solution_found)
     {
         auto curr = selectNode();
@@ -1342,14 +1342,14 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
             continue;
 
         int flag=checkTermination(curr);
-        cout<<"termination flag: "<<flag<<endl<<fflush;
-        cout<<"human flag: "<<solving_human<<endl<<fflush;
+        //cout<<"termination flag: "<<flag<<endl<<fflush;
+        //cout<<"human flag: "<<solving_human<<endl<<fflush;
         if (flag==-1)//timeout
             return solution_found;
         else if (flag==1) {
             if (solving_human)
             {
-                cout<<"at leaf, validating human"<<endl<<fflush;
+                //cout<<"at leaf, validating human"<<endl<<fflush;
                 if (validateHumanPath(curr))
                 {
                     goal_node=curr;
