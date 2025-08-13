@@ -19,13 +19,18 @@ void PathTable::deletePath(AgentID id, const Path& path)
 {
     if (path.empty())
         return;
+    //cout<<"deleting path: "<<id.id<<endl<<fflush;
+    //cout<<"path size: "<<path.size()<<endl<<fflush;
     for (int t = 0; t < (int)path.size(); t++)
     {
+        //cout<<"t: "<<t<<", path[t].location: "<<path[t].location<<endl;
+        //cout<<table[path[t].location].size()<<endl<<fflush;
         assert(table[path[t].location].size() > t);
         assert(table[path[t].location][t] == id);
         table[path[t].location][t] = NO_AGENT;
         goals[path.back().location] = MAX_COST;
     }
+    //cout<<"finish delete"<<endl<<fflush;
     if (makespan == (int) path.size() - 1) // re-compute makespan
     {
         makespan = 0;

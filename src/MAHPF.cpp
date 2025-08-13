@@ -67,8 +67,8 @@ bool MAHPF::merge()
 
     if(merge_algo== "OPTIMAL")
     {
-        if (!mergeOPTIMAL()) return false;
         cout<<"start merging with OPTIMAL"<<endl;
+        if (!mergeOPTIMAL()) return false;
     }
     // to be implemented
     else if(merge_algo== "Sub-OPTIMAL")
@@ -189,7 +189,9 @@ bool MAHPF::mergeStop()
 
 bool MAHPF::mergeOPTIMAL()
 {
-    return runCBS(false);
+    bool flag=runCBS(false);
+    cout<<"opt flag: "<<flag<<endl;
+    return flag;
 }
 bool MAHPF::mergeSubOPTIMAL(bool fix_human)
 {
@@ -273,6 +275,7 @@ bool MAHPF::mergePP(bool fix_human)
             fail=false;
             for (int id:idx_in)
             {
+                cout<<"replanning a: "<<id<<endl<<fflush;
                 Path p=robots[id].path_planner.findOptimalPath(path_table);
                 if (!p.empty())
                 {
@@ -331,6 +334,7 @@ bool MAHPF::runHuman()
     clock_t start = clock();
     for (int h=0;h<humans.size();h++)
     {
+        //cout<<"h : "<<h<<endl<<std::fflush;
         Path p=humans[h].path_planner.findOptimalPath(path_table);
         if (p.empty())
         {
@@ -395,7 +399,9 @@ bool MAHPF::runCBS(bool init)
     //cbs.print_info();
     start = clock();
     cbs.injectHuman(&humans[0].path_planner);
+    cout<<"starting new cbs herereree!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl<<fflush;
     succ = cbs.solve(time_limit-run_time, 0, MAX_COST, true);
+    cout<<"succ flag: "<<succ<<endl;
     run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
     if (succ)
     {

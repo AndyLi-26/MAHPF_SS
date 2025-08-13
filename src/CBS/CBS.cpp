@@ -1227,7 +1227,7 @@ bool CBS::validateHumanPath(CBSNode* node)
         PT.insertPath({i,AgentType::ROBOT},(*paths[i]));
     }
     //Path new_path;
-    Path new_path=h_solver->findOptimalPath(PT, SpaceTimeAStar::Cost::CONF);
+    Path new_path=h_solver->findOptimalPath(PT);
 
     if (new_path.empty())
         return false;
@@ -1302,6 +1302,7 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
     this->cost_upperbound = _cost_upperbound;
     this->time_limit = _time_limit;
 
+    cout<<"starting CBS"<<endl<<fflush;
     if (screen > 0) // 1 or 2
     {
         string name = getSolverName();
@@ -1310,7 +1311,7 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
     }
     // set timer
     start = clock();
-    bool solving_human;
+    bool solving_human=false;
 
     if(solution_found) // continue searching
     {
@@ -1319,9 +1320,13 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
         solution_cost = -2;
         if (toResume)
         {
+            cout<<"herer!!!!!!!!!!!!!!!!"<<endl<<fflush;
             solving_human=true;
             if (validateHumanPath(goal_node))
+            {
+                cout<<"got herer!!!!!!!!!!!!!!!!"<<endl<<fflush;
                 return true;
+            }
             //reinsertNode(goal_node);
             goal_node = nullptr;
         }
@@ -1329,32 +1334,22 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
     else if(!generateRoot())
         return false;
 
+    cout<<"entering the loop for CBS"<<endl<<fflush;
     while (!cleanup_list.empty() && !solution_found)
     {
         auto curr = selectNode();
         if (curr == nullptr)
             continue;
 
-        /*
-           if (terminate(curr))
-           {
-           if (solution_found)
-           goal_node = curr;
-           return solution_found;
-           }
-
-        if (solving_human && curr->conflicts.empty() && curr->unknownConf.empty()) //no conflict_selection
-        {
-            solveHuman(curr);
-        }
-        */
-
         int flag=checkTermination(curr);
-        if (flag==-1)
+        cout<<"termination flag: "<<flag<<endl<<fflush;
+        cout<<"human flag: "<<solving_human<<endl<<fflush;
+        if (flag==-1)//timeout
             return solution_found;
         else if (flag==1) {
             if (solving_human)
             {
+                cout<<"at leaf, validating human"<<endl<<fflush;
                 if (validateHumanPath(curr))
                 {
                     goal_node=curr;
