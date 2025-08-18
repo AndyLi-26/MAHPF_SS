@@ -417,6 +417,8 @@ bool MAHPF::runCBS(bool init)
 
 bool MAHPF::haveConflict(Path& p1, Path& p2)
 {
+    //cout<<"p1: "<<p1<<endl;
+    //cout<<"p2: "<<p2<<endl<<fflush;
     assert (p1.size() !=0 && p2.size() !=0);
     int min_len=p1.size();
 
@@ -452,12 +454,13 @@ void MAHPF::checkConflict(list<AgentID> &confAgents)
         {
             if (h.path.size()>r.path.size())
             {
-                //cout<<"checking against: "<<h.id<<" and "<<r.id<<endl;
+                //cout<<"checking against1: "<<h.id<<" and "<<r.id<<endl;
                 if(haveConflict(r.path,h.path))
                     confAgents.push_back(r.id);
             }
             else
             {
+                //cout<<"checking against2: "<<h.id<<" and "<<r.id<<endl;
                 if(haveConflict(h.path,r.path))
                     confAgents.push_back(r.id);
             }

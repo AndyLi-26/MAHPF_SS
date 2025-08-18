@@ -1350,11 +1350,14 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
             if (solving_human)
             {
                 //cout<<"at leaf, validating human"<<endl<<fflush;
+                bool tempflag=validateHumanPath(curr);
+
                 if (validateHumanPath(curr))
                 {
                     goal_node=curr;
                     return solution_found;
                 }
+                solution_found=false;
                 curr->clear();
                 continue;
 
@@ -1400,8 +1403,19 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
             if (flag==-1)
                 return solution_found;
             else if (flag==1) {
-                goal_node=curr;
-                return solution_found;
+                if (solving_human)
+                {
+                    //cout<<"at leaf, validating human"<<endl<<fflush;
+                    if (validateHumanPath(curr))
+                    {
+                        goal_node=curr;
+                        return solution_found;
+                    }
+                    solution_found=false;
+                    curr->clear();
+                    continue;
+
+                }
             }
             /*
                if (terminate(curr))
@@ -1528,6 +1542,7 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
             }
         }
     }  // end of while loop
+    cout<<"finished while loop"<<endl;
     return solution_found;
 }
 
