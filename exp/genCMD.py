@@ -1,7 +1,7 @@
 import sys
 exe="../release/mahpf"
 fn_folder="../bench_mark/"
-fn_opt_temp="../exp/batch"
+fn_opt_temp="../exp/batch3/ID_"
 all=[]
 BIGI=0
 for m in ["empty-8-8", "empty-16-16", "random-32-32-10", "warehouse-10-20-10-2-1"]:

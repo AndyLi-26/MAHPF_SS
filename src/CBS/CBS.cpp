@@ -1416,6 +1416,7 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
                     continue;
 
                 }
+                return solution_found;
             }
             /*
                if (terminate(curr))
