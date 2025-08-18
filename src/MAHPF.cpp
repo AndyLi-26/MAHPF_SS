@@ -275,7 +275,7 @@ bool MAHPF::mergePP(bool fix_human)
             fail=false;
             for (int id:idx_in)
             {
-                cout<<"replanning a: "<<id<<endl<<fflush;
+                //cout<<"replanning a: "<<id<<endl<<fflush;
                 Path p=robots[id].path_planner.findOptimalPath(path_table);
                 if (!p.empty())
                 {
@@ -454,13 +454,13 @@ void MAHPF::checkConflict(list<AgentID> &confAgents)
         {
             if (h.path.size()>r.path.size())
             {
-                cout<<"checking against1: "<<h.id<<" and "<<r.id<<endl;
+                //cout<<"checking against1: "<<h.id<<" and "<<r.id<<endl;
                 if(haveConflict(r.path,h.path))
                     confAgents.push_back(r.id);
             }
             else
             {
-                cout<<"checking against2: "<<h.id<<" and "<<r.id<<endl;
+                //cout<<"checking against2: "<<h.id<<" and "<<r.id<<endl;
                 if(haveConflict(h.path,r.path))
                     confAgents.push_back(r.id);
             }
