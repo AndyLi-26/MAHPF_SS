@@ -1,8 +1,9 @@
 import sys
-exe="../debug/mahpf"
+exe="../release/mahpf"
 fn_folder="../bench_mark/"
-fn_opt="../exp/batch2.csv"
+fn_opt_temp="../exp/batch"
 all=[]
+BIGI=0
 for m in ["empty-8-8", "empty-16-16", "random-32-32-10", "warehouse-10-20-10-2-1"]:
     fn_m= f"{fn_folder}{m}/map.map"
     for i_type in ["random","even"]:
@@ -14,6 +15,8 @@ for m in ["empty-8-8", "empty-16-16", "random-32-32-10", "warehouse-10-20-10-2-1
             for r in range(10,min(101,maxlen)):
                 for init_method in ["OPTIMAL"]:
                     for merge_method in ["stop", "MCP","superMCP", "Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]:
+                        fn_opt=fn_opt_temp+f"{BIGI}"+".opt"
+                        BIGI+=1
                         cmd=[exe,"-m",fn_m,"-a",fn_ins, "-r",r,"-t",60,
                              "--initAlgo",init_method,"--mergeAlgo",merge_method,
                              "--stats",fn_opt]
