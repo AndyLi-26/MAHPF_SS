@@ -64,7 +64,6 @@ void CBS::copyConflicts(const list<shared_ptr<Conflict >>& conflicts,
 	}
 }
 
-
 void CBS::findConflicts(HLNode& curr, int a1, int a2)
 {
     assert(a1!=num_of_agents);
@@ -181,7 +180,6 @@ void CBS::findConflicts(HLNode& curr)
 	// curr.distance_to_go = (int)(curr.unknownConf.size() + curr.conflicts.size());
 	runtime_detect_conflicts += (double)(clock() - t) / CLOCKS_PER_SEC;
 }
-
 
 shared_ptr<Conflict> CBS::chooseConflict(const HLNode &node) const
 {
