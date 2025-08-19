@@ -23,7 +23,7 @@ MAHPF::MAHPF(const Instance& instance, double time_limit,
 
 bool MAHPF::getInitialSolution() {
     cout<<"seraching for initial solution"<<endl;
-    bool succ;
+    bool succ=false;
     if (init_algo_name == "OPTIMAL") {
         runHuman();
         cout<<"path after return"<<endl;
@@ -113,6 +113,7 @@ bool MAHPF::merge()
 
     }
     checkConflict(confAgents);
+    cout<<"after check conf"<<endl<<fflush;
     if (!confAgents.empty())
     {
         cout<<"=========================================================== ";
@@ -454,13 +455,13 @@ void MAHPF::checkConflict(list<AgentID> &confAgents)
         {
             if (h.path.size()>r.path.size())
             {
-                //cout<<"checking against1: "<<h.id<<" and "<<r.id<<endl;
+                cout<<"checking against1: "<<h.id<<" and "<<r.id<<endl;
                 if(haveConflict(r.path,h.path))
                     confAgents.push_back(r.id);
             }
             else
             {
-                //cout<<"checking against2: "<<h.id<<" and "<<r.id<<endl;
+                cout<<"checking against2: "<<h.id<<" and "<<r.id<<endl;
                 if(haveConflict(h.path,r.path))
                     confAgents.push_back(r.id);
             }

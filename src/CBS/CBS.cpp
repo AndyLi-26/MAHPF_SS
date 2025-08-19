@@ -1312,16 +1312,17 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
     // set timer
     start = clock();
     bool solving_human=false;
+    if (toResume)
+        solving_human=true;
 
     if(solution_found) // continue searching
     {
         //goal_node = nullptr;
         solution_found = false;
         solution_cost = -2;
-        if (toResume)
+        if (solving_human)
         {
             //cout<<"herer!!!!!!!!!!!!!!!!"<<endl<<fflush;
-            solving_human=true;
             if (validateHumanPath(goal_node))
             {
                 //cout<<"got herer!!!!!!!!!!!!!!!!"<<endl<<fflush;
@@ -1543,7 +1544,6 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
             }
         }
     }  // end of while loop
-    cout<<"finished while loop"<<endl;
     return solution_found;
 }
 

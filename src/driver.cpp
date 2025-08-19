@@ -75,7 +75,7 @@ int main(int argc, char** argv)
     string initAlgo=vm["initAlgo"].as<string>(),mergeAlgo=vm["mergeAlgo"].as<string>();
     MAHPF mahpf(instance, time_limit, initAlgo, mergeAlgo, screen);
 
-    bool logging;
+    bool logging=false;
     if (vm.count("logP"))
         logging=true;
 
