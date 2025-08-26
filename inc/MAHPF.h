@@ -47,6 +47,6 @@ class MAHPF
         double run_time = 0;
         int init_conf;
         int screen;
-        bool logP;
+        bool logP=false;
         PathTable path_table; // 1. stores the paths of all agents in a time-space table;
 };

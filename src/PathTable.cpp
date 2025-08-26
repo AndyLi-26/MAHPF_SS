@@ -4,8 +4,11 @@ void PathTable::insertPath(AgentID id, const Path& path)
 {
     if (path.empty())
         return;
+    //cout<<"inserting path: "<<path<<endl<<fflush;
     for (int t = 0; t < (int)path.size(); t++)
     {
+        //cout<<"t: "<<t<<" loc: "<<path[t].location<<endl;
+        //cout<<"tb path loc size: "<<table[path[t].location].size()<<endl<<fflush;
         if (table[path[t].location].size() <= t)
             table[path[t].location].resize(t + 1, NO_AGENT);
         // assert(table[path[t].location][t] == NO_AGENT);

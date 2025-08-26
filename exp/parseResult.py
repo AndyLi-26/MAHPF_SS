@@ -49,7 +49,7 @@ exit()
 
 def sanityCheck(l):
     print(l)
-    assert len(l)==6
+    assert len(l)==len(mergeAlgo)
     return min(l)==l[-1]
 
     for i in range(len(l)-1):
@@ -78,7 +78,8 @@ def genMarkers(n):
 
 
 maps=["empty-8-8", "empty-16-16", "random-32-32-10", "warehouse-10-20-10-2-1"]
-mergeAlgo=["stop", "superMCP","MCP","Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]
+#mergeAlgo=["stop", "superMCP","MCP","Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]
+mergeAlgo=["stop","Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]
 colormap=genColor(len(mergeAlgo))
 markers=genMarkers(len(mergeAlgo))
 
@@ -99,7 +100,7 @@ for mi,m in enumerate(maps):
     for idx in IDXS:
         tmp=filterItem(localL, lambda l: l[0:4]==list(idx))
         #[print(i) for i in tmp]
-        assert len(tmp)==6
+        assert len(tmp)==len(mergeAlgo)
 
         sanity=[9999999 for _ in mergeAlgo ]
         for l in tmp:

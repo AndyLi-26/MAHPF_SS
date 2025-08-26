@@ -126,6 +126,13 @@ bool MAHPF::merge()
         assert(false);
         return false;
     }
+    else{
+        if (screen>0)
+        {
+            cout<<"initial path"<<endl;
+            printPathsA();
+        }
+    }
     final_sol.Soc=humans[0].path.size();
     for (Agent r:robots)
         final_sol.Soc+=r.path.size();
@@ -448,6 +455,31 @@ bool MAHPF::haveConflict(Path& p1, Path& p2)
 void MAHPF::checkConflict(list<AgentID> &confAgents)
 {
     confAgents.clear();
+    for (int i=0;i<robots.size();i++)
+    {
+        for (int j=i+1;j<robots.size();j++)
+        {
+            if (robots[i].path.size()>robots[j].path.size())
+            {
+                //cout<<"checking against1: "<<h.id<<" and "<<r.id<<endl;
+                if(haveConflict(robots[j].path,robots[i].path))
+                {
+                    confAgents.push_back(robots[i].id);
+                    confAgents.push_back(robots[j].id);
+                }
+            }
+            else
+            {
+                //cout<<"checking against2: "<<h.id<<" and "<<r.id<<endl;
+                if(haveConflict(robots[i].path,robots[j].path))
+                {
+                    confAgents.push_back(robots[i].id);
+                    confAgents.push_back(robots[j].id);
+                }
+            }
+
+        }
+    }
     for (Agent h : humans)
     {
         //AgentID confAgent(-1,AgentType::NONE);
@@ -474,8 +506,8 @@ void MAHPF::checkConflict(list<AgentID> &confAgents)
                }*/
         }
         /*
-        if (confAgent && find(confAgents.begin(),confAgents.end(),confAgent)==confAgents.end())
-        */
+           if (confAgent && find(confAgents.begin(),confAgents.end(),confAgent)==confAgents.end())
+           */
     }
 }
 

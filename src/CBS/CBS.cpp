@@ -563,7 +563,6 @@ inline void CBS::pushNode(CBSNode* node)
     }
 }
 
-
 inline bool CBS::reinsertNode(CBSNode* node)
 {
     if (screen == 2)
@@ -593,7 +592,6 @@ inline bool CBS::reinsertNode(CBSNode* node)
     }
     return true;
 }
-
 
 CBSNode* CBS::selectNode()
 {
@@ -786,7 +784,6 @@ CBSNode* CBS::selectNode()
     return curr;
 }
 
-
 set<int> CBS::getInvalidAgents(const list<Constraint>& constraints)  // return agents that violates the constraints
 {
     set<int> agents;
@@ -848,7 +845,6 @@ set<int> CBS::getInvalidAgents(const list<Constraint>& constraints)  // return a
     }
     return agents;
 }
-
 
 void CBS::printPaths() const
 {
@@ -1164,7 +1160,7 @@ void CBS::solveHuman(CBSNode* node)
     Path new_path=h_solver->findOptimalPath(PT, SpaceTimeAStar::Cost::CONF);
     Ps_human=new_path;*/
 
-    PathTable PT(search_engines[0]->instance.map_size);
+    PathTable PT(map_size);
     for (int i=0;i<num_of_agents;i++)
     {
         assert(!(paths[i]->empty()));
@@ -1216,37 +1212,194 @@ void CBS::solveHuman(CBSNode* node)
     */
 }
 
-bool CBS::validateHumanPath(CBSNode* node)
+
+bool CBS::haveConflict(Path& p1, Path& p2)
 {
-    PathTable PT(search_engines[0]->instance.map_size);
+    //cout<<"p1: "<<p1<<endl;
+    //cout<<"p2: "<<p2<<endl<<fflush;
+    assert (p1.size() !=0 && p2.size() !=0);
+    int min_len=p1.size();
+
+    for (int t=0;t<min_len;t++)
+    {
+        int l1=p1.at(t).location;
+        int l2=p2.at(t).location;
+        //cout<<"t: "<<t<<" l1: "<<l1<<" l2: "<<l2<<endl;
+        if (l1==l2) return true;
+		else if (t < min_len - 1
+			&& l1 == p2.at(t + 1).location
+			&& l2 == p1.at(t + 1).location)
+            return true;
+    }
+	if (p1.size() == p2.size()) return false;
+
+    int l1=p1.back().location;
+    for (int t=min_len; t<(int)p2.size(); t++)
+    {
+        int l2=p2.at(t).location;
+        if (l1==l2) return true;
+    }
+    return false;
+}
+/*
+void CBS::checkConflict(list<AgentID> &confAgents)
+{
+    confAgents.clear();
+    for (Agent h : humans)
+    {
+        for (Agent r:robots)
+        {
+            if (h.path.size()>r.path.size())
+            {
+                if(haveConflict(r.path,h.path))
+                    confAgents.push_back(r.id);
+            }
+            else
+            {
+                if(haveConflict(h.path,r.path))
+                    confAgents.push_back(r.id);
+            }
+       }
+    }
+}*/
+
+bool CBS::validateHumanPath(CBSNode& node)
+{
+    //get all paths from each mdd
+    vector<PathPool> allPs;
+    allPs.resize(num_of_agents);
     for (int i=0;i<num_of_agents;i++)
     {
-        assert(!(paths[i]->empty()));
-        PT.insertPath({i,AgentType::ROBOT},(*paths[i]));
+        MDD *mdd1 = nullptr;
+        mdd1 = mdd_helper.getMDD(node, i, paths[i]->size());
+        Paths tmp=mdd1->getAllPaths(paths[i]->size());
+        allPs[i]=PathPool(tmp.begin(), tmp.end());
+        //cout<<"mdd path:"<<endl;
+        for (int j=0;j<allPs[i].size();j++)
+            allPs[i][j].insert(allPs[i][j].begin(),*(paths_found_initially[i].begin()));
+        //for (auto p:allPs[i])
+        //{
+        //    cout<<p;
+        //}
     }
+
+    //from paths to all permutations
+    vector<int> idx(num_of_agents,0);
+    PathPool Ps;
+    vector<vector<int>> incompate;
+    Ps.resize(num_of_agents);
+
+    while(1)
+    {
+
+    runtime = (double)(clock() - start) / CLOCKS_PER_SEC;
+    if (runtime > time_limit) return false;
+        //cout<<"===================================================================="<<endl;
+        for (int i = 0; i < num_of_agents; i++) {
+            Ps[i]=allPs[i][idx[i]];
+            //cout<<"agent "<<i<< "'s path size: "<<allPs[i][idx[i]]<<endl<<fflush;
+        }
+
+        for (int i = 0; i < num_of_agents; i++) {
+            for (int j = i+1; j < num_of_agents; j++) {
+                if (Ps[i].size()>Ps[j].size())
+                {
+                    if(haveConflict(Ps[j],Ps[i])) {
+                        vector<int> conf = {i,idx[i],j,idx[j]};
+                        incompate.push_back(conf);
+                        goto GOTO_SKIP;
+                    }
+                }
+                else
+                {
+                    if(haveConflict(Ps[i],Ps[j])) {
+                        vector<int> conf = {i,idx[i],j,idx[j]};
+                        incompate.push_back(conf);
+                        goto GOTO_SKIP;
+                    }
+                }
+            }
+        }
+
+
+        if (validateHumanPath(Ps))
+        {
+            // copy path over
+
+            for (int i=0;i<num_of_agents;i++)
+            {
+                node.paths.emplace_back(i,Ps[i]);
+                //cout<<"path here:"<<endl;
+                //cout<<"all Ps path: "<<allPs[i][idx[i]];
+                //cout<<"Ps path: "<<Ps[i]<<endl;
+                paths[i]=&(node.paths.back().second);
+            }
+            return true;
+        }
+
+GOTO_SKIP:
+        int i = num_of_agents - 1;
+        while (i >= 0 && ++idx[i] == allPs[i].size()) {
+            idx[i] = 0;
+            i--;
+        }
+        //cout<<"idx: ";
+        //for (int i = 0; i < num_of_agents; i++) {
+        //  cout<<idx[i]<<", ";
+        //}
+        //cout<<endl;
+
+        for (int i=0;i<incompate.size();i++)
+        {
+            if (idx[incompate[i][0]]==incompate[i][1] && idx[incompate[i][2]]==incompate[i][3])
+            {
+                // cout<<"skipped!!"<<endl;
+                //cout<<"incomp: "<<incompate[i][0]<<", "<<incompate[i][1]<<", "<<incompate[i][2]<<", "<<
+                //    incompate[i][3]<<endl;
+                int midx= incompate[i][0] > incompate[i][2] ? incompate[i][0] : incompate[i][2];
+                for (int j= midx+1; j<num_of_agents; j++)
+                {
+                    idx[j]=allPs[j].size()-1;
+                }
+                goto GOTO_SKIP;
+            }
+        }
+
+        if (i < 0) return false;
+    }
+
+    /*
+       PathTable PT(search_engines[0]->instance.map_size);
+       for (int i=0;i<num_of_agents;i++)
+       {
+       assert(!(paths[i]->empty()));
+       PT.insertPath({i,AgentType::ROBOT},(*paths[i]));
+       }
     //Path new_path;
     Path new_path=h_solver->findOptimalPath(PT);
 
     if (new_path.empty())
-        return false;
+    return false;
 
     Ps_human=new_path;
     return true;
+    */
 
     //paths.push_back(&Ps_human);
     //paths.pop_back();
-
 }
 
 bool CBS::validateHumanPath(const PathPool& Ps)
 {
-    PathTable PT(path_table.table.size());
+    //cout<<"path_table.table.size"<<path_table.table.size()<<endl;
+    PathTable PT(map_size);
     for (int i=0;i<num_of_agents;i++)
     {
         assert(!Ps[i].empty());
         PT.insertPath({i,AgentType::ROBOT},Ps[i]);
     }
-    Path new_path = h_solver->findOptimalPath(PT,SpaceTimeAStar::Cost::CONF);
+    //Path new_path = h_solver->findOptimalPath(PT,SpaceTimeAStar::Cost::CONF);
+    Path new_path=h_solver->findOptimalPath(PT);
     if (new_path.empty())
         return false;
     Ps_human=new_path;
@@ -1320,8 +1473,10 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
         solution_cost = -2;
         if (solving_human)
         {
-            //cout<<"herer!!!!!!!!!!!!!!!!"<<endl<<fflush;
-            if (validateHumanPath(goal_node))
+            cout<<"herer!!!!!!!!!!!!!!!!"<<endl<<fflush;
+            bool tempflag=validateHumanPath(*goal_node);
+            cout<<"out of validating human"<<endl<<fflush;
+            if (tempflag)
             {
                 //cout<<"got herer!!!!!!!!!!!!!!!!"<<endl<<fflush;
                 return true;
@@ -1348,10 +1503,11 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
         else if (flag==1) {
             if (solving_human)
             {
-                //cout<<"at leaf, validating human"<<endl<<fflush;
-                bool tempflag=validateHumanPath(curr);
+                cout<<"at leaf, validating human"<<endl<<fflush;
+                bool tempflag=validateHumanPath(*curr);
+                cout<<"out of validating human"<<endl<<fflush;
 
-                if (validateHumanPath(curr))
+                if (tempflag)
                 {
                     goal_node=curr;
                     return solution_found;
@@ -1405,7 +1561,7 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
                 if (solving_human)
                 {
                     //cout<<"at leaf, validating human"<<endl<<fflush;
-                    if (validateHumanPath(curr))
+                    if (validateHumanPath(*curr))
                     {
                         goal_node=curr;
                         return solution_found;
@@ -1559,7 +1715,7 @@ bool CBS::terminate(HLNode* curr)
     if (curr->conflicts.empty() && curr->unknownConf.empty()) //no conflicts
     {// found a solution
         solution_found = true;
-        // goal_node = curr;
+         goal_node = dynamic_cast<CBSNode*> (curr);
         solution_cost = curr->getFHatVal() - curr->cost_to_go;
         if (!validateSolution())
         {
@@ -1642,6 +1798,7 @@ CBS::CBS(vector<SingleAgentSolver*>& search_engines,
     corridor_helper(search_engines, initial_constraints),
     heuristic_helper(search_engines.size(), paths, search_engines, initial_constraints, mdd_helper)
 {
+    map_size=search_engines[0]->instance.map_size;
     num_of_agents = (int) search_engines.size();
     mutex_helper.search_engines = search_engines;
 }
@@ -1659,6 +1816,7 @@ CBS::CBS(vector<SingleAgentSolver*>& search_engines, const PathTable& path_table
 {
     num_of_agents = (int) search_engines.size();
     mutex_helper.search_engines = search_engines;
+    map_size=path_table.table.size();
     for (int i = 0; i < num_of_agents; i++)
     {
         initial_constraints[i].goal_location = search_engines[i]->goal_location;
@@ -1676,6 +1834,7 @@ CBS::CBS(const Instance& instance, bool sipp, int screen) :
 {
     clock_t t = clock();
     initial_constraints.reserve(num_of_agents);
+    map_size=instance.map_size;
     for (int i = 0; i < num_of_agents; i++)
         initial_constraints.emplace_back(path_table, instance.num_of_cols, instance.map_size);
 

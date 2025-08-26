@@ -140,6 +140,7 @@ protected:
 	clock_t start;
 
 	int num_of_agents;
+    int map_size=-1;
 
 
 
@@ -192,7 +193,8 @@ private: // CBS only, cannot be used by ECBS
     void solveHuman(CBSNode* node);
     bool validateHumanPath(const PathPool& Ps);
     int checkTermination(HLNode* curr);
-    bool validateHumanPath(CBSNode* node);
+    bool validateHumanPath(CBSNode& node);
+    bool haveConflict(Path& p1, Path& p2);
 
 	void printPaths() const;
 };
