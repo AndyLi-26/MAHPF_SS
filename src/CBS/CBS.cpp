@@ -1337,7 +1337,7 @@ bool CBS::validateHumanPath(CBSNode& node)
             return true;
         }
 
-GOTO_SKIP:
+    GOTO_SKIP:
         int i = num_of_agents - 1;
         while (i >= 0 && ++idx[i] == allPs[i].size()) {
             idx[i] = 0;
@@ -1473,9 +1473,9 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
         solution_cost = -2;
         if (solving_human)
         {
-            cout<<"herer!!!!!!!!!!!!!!!!"<<endl<<fflush;
+            //cout<<"herer!!!!!!!!!!!!!!!!"<<endl<<fflush;
             bool tempflag=validateHumanPath(*goal_node);
-            cout<<"out of validating human"<<endl<<fflush;
+            //cout<<"out of validating human"<<endl<<fflush;
             if (tempflag)
             {
                 //cout<<"got herer!!!!!!!!!!!!!!!!"<<endl<<fflush;

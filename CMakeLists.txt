@@ -13,7 +13,8 @@ file(GLOB SOURCES "src/*.cpp" "src/CBS/*.cpp" "src/lacam/*.cpp")
 add_executable(mahpf ${SOURCES})
 
 # Find Boost
-find_package(Boost REQUIRED COMPONENTS program_options system filesystem)
+find_package(Boost REQUIRED COMPONENTS program_options filesystem)
+#find_package(Boost REQUIRED COMPONENTS program_options system filesystem)
 
 # Find Eigen3 for PIBT
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)

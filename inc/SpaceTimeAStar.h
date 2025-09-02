@@ -11,12 +11,13 @@ public:
 	dis_open_handle_t dis_open_handle;
 	conf_open_handle_t conf_open_handle;
 	conf_open_handle_t dis_focal_handle;
+    bool backEdge;
 
 
 	AStarNode() : LLNode() {}
 
 	AStarNode(int loc, int g_val, int h_val, LLNode* parent, int timestep, int num_of_conflicts = 0, bool in_openlist = false) :
-		LLNode(loc, g_val, h_val, parent, timestep, num_of_conflicts, in_openlist) {}
+		LLNode(loc, g_val, h_val, parent, timestep, num_of_conflicts, in_openlist) {backEdge=false;}
 
 
 	~AStarNode() {}
@@ -26,9 +27,14 @@ public:
 	{
 		size_t operator()(const AStarNode* n) const
 		{
-			size_t loc_hash = std::hash<int>()(n->location);
-			size_t timestep_hash = std::hash<int>()(n->timestep);
-			return (loc_hash ^ (timestep_hash << 1));
+			size_t h1 = std::hash<int>()(n->location);
+			size_t h2 = std::hash<int>()(n->timestep);
+			size_t h3 = std::hash<bool>()(n->backEdge);
+
+            size_t seed=h1;
+            seed ^= h2 + 0x9e3779b9 + (seed << 6) + (seed >> 2); // boost::hash_combine style
+            seed ^= h3 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+			return seed;
 		}
 	};
 
@@ -42,7 +48,8 @@ public:
 			return (s1 == s2) || (s1 && s2 &&
                         s1->location == s2->location &&
                         s1->timestep == s2->timestep &&
-						s1->wait_at_goal == s2->wait_at_goal);
+						s1->wait_at_goal == s2->wait_at_goal &&
+                        s1->backEdge == s2->backEdge);
 		}
 	};
 };
@@ -59,6 +66,9 @@ public:
     // Returns a shortest path that does not collide with paths in the path table
     Path findOptimalPath(const PathTable& path_table, Cost obj);
     Path findOptimalPath(const PathTable& path_table) {return findOptimalPath(path_table,Cost::DIS);}
+    void setBackEdge();
+    bool backEdge;
+    vector<int> my_back_heuristic;  // this is the precomputed heuristic for this agent
     //Path findLeastCollisionPath(const PathTable& path_table)
 	// find path by time-space A* search
 	// Returns a shortest path that satisfies the constraints of the give node  while
@@ -76,7 +86,7 @@ public:
     void unsetObs(){obs.clear();}
 
 	SpaceTimeAStar(const Instance& instance, AgentID id):
-		SingleAgentSolver(instance, id) {}
+		SingleAgentSolver(instance, id) {backEdge=false;}
 
 private:
 	// define typedefs and handles for heap

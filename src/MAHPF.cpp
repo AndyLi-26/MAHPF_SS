@@ -1,9 +1,9 @@
 #include "MAHPF.h"
 MAHPF::MAHPF(const Instance& instance, double time_limit,
-                string init_algo_name, string merge_algo, int screen):
+                string init_algo_name, string merge_algo, int screen, bool backEdge):
     instance(instance), time_limit(time_limit),
     init_algo_name(init_algo_name), merge_algo(merge_algo), screen(screen),
-    path_table(instance.map_size)
+    path_table(instance.map_size),backEdge(backEdge)
 {
     int N = instance.getDefaultNumberOfAgents(AgentType::ROBOT);
     robots.reserve(N);
@@ -12,9 +12,11 @@ MAHPF::MAHPF(const Instance& instance, double time_limit,
     int M=instance.getDefaultNumberOfAgents(AgentType::HUMAN);
     humans.reserve(M);
     for (int i = 0; i < M; i++)
+    {
         humans.emplace_back(instance, AgentID(i,AgentType::HUMAN));
-
-
+        cout<<"back edge: "<<backEdge<<endl;
+        if (backEdge) humans.back().path_planner.setBackEdge();
+    }
     time_limit=time_limit;
     cur_Soc=0;
     run_time=0;
@@ -41,10 +43,13 @@ bool MAHPF::getInitialSolution() {
         cout << "Invalid initial solution algorithm name" << endl;
         return false;
     }
+
+    init_sol=0;
     for (Agent r:robots)
         init_sol.Soc+=r.path.size();
-    init_sol.makespan=std::max(path_table.makespan,(int)humans[0].path.size());
+    //init_sol.makespan=std::max(path_table.makespan,(int)humans[0].path.size());
 
+    init_sol.makespan=path_table.makespan;
     cur_Soc=init_sol.Soc;
     return succ;
 }
@@ -133,10 +138,12 @@ bool MAHPF::merge()
             printPathsA();
         }
     }
-    final_sol.Soc=humans[0].path.size();
+    //final_sol.Soc=humans[0].path.size();
+    final_sol.Soc=0;
     for (Agent r:robots)
         final_sol.Soc+=r.path.size();
-    final_sol.makespan=std::max(path_table.makespan,(int)humans[0].path.size());
+    //final_sol.makespan=std::max(path_table.makespan,(int)humans[0].path.size());
+    final_sol.makespan=path_table.makespan;
     cur_Soc=final_sol.Soc;
     return true;
 }
@@ -201,6 +208,7 @@ bool MAHPF::mergeOPTIMAL()
     cout<<"opt flag: "<<flag<<endl;
     return flag;
 }
+
 bool MAHPF::mergeSubOPTIMAL(bool fix_human)
 {
     return mergePP(fix_human);
@@ -306,10 +314,12 @@ bool MAHPF::mergePP(bool fix_human)
         if (!fix_human)
         {
 
+            path_table.deletePath(humans[0].id,humans[0].path);
             Path p=humans[0].path_planner.findOptimalPath(path_table,SpaceTimeAStar::Cost::CONF);
             if (!p.empty())
             {
                 humans[0].path=p;
+                path_table.insertPath(humans[0].id,humans[0].path);
                 checkConflict(failedAgents);
                 if (failedAgents.empty())
                 {
@@ -319,6 +329,7 @@ bool MAHPF::mergePP(bool fix_human)
                         printPathsA();
                     }
                     run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
+                    path_table.deletePath(humans[0].id,humans[0].path);
                     return true;
                 }
             }
@@ -350,7 +361,7 @@ bool MAHPF::runHuman()
             return false;
         }
         humans[h].path=p;
-        init_sol.Soc=humans[h].path.size();
+        //init_sol.Soc=humans[h].path.size();
     }
     run_time += (double)(clock() - start) / CLOCKS_PER_SEC;
     return true;
@@ -414,6 +425,7 @@ bool MAHPF::runCBS(bool init)
         for (size_t i = 0; i < robots.size(); i++)
         {
             robots[i].path = *cbs.paths[i];
+            path_table.insertPath(robots[i].id, robots[i].path);
         }
         //for (int h=0;h<humans.size();h++)
         //{
@@ -423,7 +435,7 @@ bool MAHPF::runCBS(bool init)
     return succ;
 }
 
-bool MAHPF::haveConflict(Path& p1, Path& p2)
+bool MAHPF::haveConflict(Path& p1, Path& p2, bool h)
 {
     //cout<<"p1: "<<p1<<endl;
     //cout<<"p2: "<<p2<<endl<<fflush;
@@ -441,7 +453,7 @@ bool MAHPF::haveConflict(Path& p1, Path& p2)
 			&& l2 == p1.at(t + 1).location)
             return true;
     }
-	if (p1.size() == p2.size()) return false;
+	if ( h || (p1.size() == p2.size())) return false;
 
     int l1=p1.back().location;
     for (int t=min_len; t<(int)p2.size(); t++)
@@ -477,7 +489,6 @@ void MAHPF::checkConflict(list<AgentID> &confAgents)
                     confAgents.push_back(robots[j].id);
                 }
             }
-
         }
     }
     for (Agent h : humans)
@@ -494,8 +505,16 @@ void MAHPF::checkConflict(list<AgentID> &confAgents)
             else
             {
                 //cout<<"checking against2: "<<h.id<<" and "<<r.id<<endl;
-                if(haveConflict(h.path,r.path))
-                    confAgents.push_back(r.id);
+                if (backEdge)
+                {
+                    if(haveConflict(h.path,r.path, true))
+                        confAgents.push_back(r.id);
+                }
+                else
+                {
+                    if(haveConflict(h.path,r.path))
+                        confAgents.push_back(r.id);
+                }
             }
             /*
                if (t<r.path.size() && r.path[t].location==h.path[t].location)

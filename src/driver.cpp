@@ -47,6 +47,8 @@ int main(int argc, char** argv)
              "window size for winPIBT")
         ("winPibtSoftmode", po::value<bool>()->default_value(true),
              "winPIBT soft mode")
+        ("backEdge", po::value<bool>()->default_value(true),
+             "start from edge and go back")
 		;
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -73,7 +75,11 @@ int main(int argc, char** argv)
     int screen = vm["screen"].as<int>();
 	srand(0);
     string initAlgo=vm["initAlgo"].as<string>(),mergeAlgo=vm["mergeAlgo"].as<string>();
-    MAHPF mahpf(instance, time_limit, initAlgo, mergeAlgo, screen);
+
+    bool backEdge=vm["backEdge"].as<bool>();
+
+    cout<<"back edge: "<<backEdge<<endl;
+    MAHPF mahpf(instance, time_limit, initAlgo, mergeAlgo, screen, backEdge);
 
     bool logging=false;
     if (vm.count("logP"))

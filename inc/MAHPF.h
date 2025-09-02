@@ -7,7 +7,7 @@ class MAHPF
 {
     public:
         MAHPF(const Instance& instance, double time_limit,
-                string init_algo_name, string merge_algo, int screen);
+                string init_algo_name, string merge_algo, int screen, bool backEdge);
 
         bool getInitialSolution();
         bool merge();
@@ -15,6 +15,7 @@ class MAHPF
         Stats init_sol;
         Stats final_sol;
         int cur_Soc;
+        bool backEdge;
 
         void logStats(int n);
         void logExpStats(const string& statsFn, const string& map, const string& instance, int r, int h,
@@ -38,7 +39,7 @@ class MAHPF
         bool mergeOPTIMAL();
         int intersect(int t, int loc, PathPool& P);
         void checkConflict(list<AgentID> &confAgents);
-        bool haveConflict(Path& p1, Path& p2);
+        bool haveConflict(Path& p1, Path& p2, bool h=false);
         bool delayAgents(int t, PathPool &P);
         string init_algo_name;
         string merge_algo;
