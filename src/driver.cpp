@@ -19,9 +19,9 @@ int main(int argc, char** argv)
 		// params for the input instance and experiment settings
 		("map,m", po::value<string>()->required(), "input file for map")
 		("agents,a", po::value<string>()->required(), "input file for agents")
-		//("humans,h", po::value<string>()->required(), "input file for humans")
+		("humans,h", po::value<string>()->required(), "input file for humans")
 		("robotNum,r", po::value<int>()->default_value(0), "number of agents")
-		("humanNum,h", po::value<int>()->default_value(1), "number of human")
+		("humanNum", po::value<int>()->default_value(1), "number of human")
         ("output,o", po::value<string>(), "output file")
         ("logP", "log file")
 		("cutoffTime,t", po::value<double>()->default_value(7200), "cutoff time (seconds)")
@@ -67,9 +67,9 @@ int main(int argc, char** argv)
 
 	srand((int)time(0));
 
-    string map=vm["map"].as<string>(),agents=vm["agents"].as<string>();
+    string map=vm["map"].as<string>(),agents=vm["agents"].as<string>(), humans=vm["humans"].as<string>();
     int h=vm["humanNum"].as<int>(),a=vm["robotNum"].as<int>();
-	Instance instance(map, agents,h,a);
+	Instance instance(map, agents,humans,h,a);
 
     double time_limit = vm["cutoffTime"].as<double>();
     int screen = vm["screen"].as<int>();

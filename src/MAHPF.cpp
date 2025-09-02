@@ -60,6 +60,11 @@ bool MAHPF::merge()
     checkConflict(confAgents);
     if (confAgents.empty())
     {
+        final_sol.Soc=0;
+        for (Agent r:robots)
+            final_sol.Soc+=r.path.size();
+        //final_sol.makespan=std::max(path_table.makespan,(int)humans[0].path.size());
+        final_sol.makespan=path_table.makespan;
         cout<<"no conflict already, no need to merge"<<endl;
         //logPath("path.log");
         return true;

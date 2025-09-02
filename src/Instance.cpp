@@ -2,10 +2,10 @@
 
 int RANDOM_WALK_STEPS = 100000;
 
-Instance::Instance(const string& map_fname, const string& agent_fname,
+Instance::Instance(const string& map_fname, const string& agent_fname, const string& human_fname,
         int num_of_humans, int num_of_agents,
         int num_of_rows, int num_of_cols, int num_of_obstacles, int warehouse_width):
-    map_fname(map_fname), agent_fname(agent_fname),
+    map_fname(map_fname), agent_fname(agent_fname), human_fname(human_fname),
     num_of_humans(num_of_humans),num_of_agents(num_of_agents)
 {
     bool succ = loadMap();
@@ -415,6 +415,40 @@ bool Instance::loadAgents()
         }
     }
     myfile.close();
+
+    // read human task
+    ifstream humanfile (human_fname.c_str());
+    if (!humanfile.is_open())
+        return false;
+
+    getline(humanfile, line);
+    for (int i = 0; i < num_of_agents; i++)
+    {
+        getline(humanfile, line);
+    }
+
+    start_human.resize(num_of_humans);
+    goal_human.resize(num_of_humans);
+    char_separator<char> sep("\t");
+    int i=0;
+    while (i<num_of_humans)
+    {
+        getline(humanfile, line);
+        tokenizer< char_separator<char> > tok(line, sep);
+        task t=line2task(tok);
+        bool rep=false;
+        for (int j = 0; j < num_of_agents; j++)
+        {
+            if (start_agent[j]==t.first || goal_agent[j]==t.second)
+            {rep=true;break;}
+        }
+        if (rep) continue;
+        start_human[i]=t.first;
+        goal_human[i]=t.second;
+        i++;
+    }
+    humanfile.close();
+
     return true;
 }
 
@@ -443,51 +477,51 @@ task Instance::line2task(boost::tokenizer< boost::char_separator<char> > tok)
 
 }
 /*
-bool Instance::loadHumans()
-{
-    using namespace std;
-    using namespace boost;
+   bool Instance::loadHumans()
+   {
+   using namespace std;
+   using namespace boost;
 
-    string line;
-    ifstream myfile (human_fname.c_str());
-    if (!myfile.is_open())
-        return false;
+   string line;
+   ifstream myfile (human_fname.c_str());
+   if (!myfile.is_open())
+   return false;
 
-    getline(myfile, line);
-    if (line[0] == 'v') // Nathan's benchmark
-    {
-        if (num_of_humans == 0)
-        {
-            cerr << "The number of human should be larger than 0" << endl;
-            exit(-1);
-        }
-        start_human.resize(num_of_humans);
-        goal_human.resize(num_of_humans);
-        char_separator<char> sep("\t");
-        for (int i = 0; i < num_of_humans; i++)
-        {
-            getline(myfile, line);
-            tokenizer< char_separator<char> > tok(line, sep);
-            tokenizer< char_separator<char> >::iterator beg = tok.begin();
-            beg++; // skip the first number
-            beg++; // skip the map name
-            beg++; // skip the columns
-            beg++; // skip the rows
-                   // read start [row,col] for agent i
-            int col = atoi((*beg).c_str());
-            beg++;
-            int row = atoi((*beg).c_str());
-            start_human[i] = linearizeCoordinate(row, col);
-            // read goal [row,col] for agent i
-            beg++;
-            col = atoi((*beg).c_str());
-            beg++;
-            row = atoi((*beg).c_str());
-            goal_human[i] = linearizeCoordinate(row, col);
-        }
-    }
-    myfile.close();
-    return true;
+   getline(myfile, line);
+   if (line[0] == 'v') // Nathan's benchmark
+   {
+   if (num_of_humans == 0)
+   {
+   cerr << "The number of human should be larger than 0" << endl;
+   exit(-1);
+   }
+   start_human.resize(num_of_humans);
+   goal_human.resize(num_of_humans);
+   char_separator<char> sep("\t");
+   for (int i = 0; i < num_of_humans; i++)
+   {
+   getline(myfile, line);
+   tokenizer< char_separator<char> > tok(line, sep);
+   tokenizer< char_separator<char> >::iterator beg = tok.begin();
+   beg++; // skip the first number
+   beg++; // skip the map name
+   beg++; // skip the columns
+   beg++; // skip the rows
+          // read start [row,col] for agent i
+          int col = atoi((*beg).c_str());
+          beg++;
+          int row = atoi((*beg).c_str());
+          start_human[i] = linearizeCoordinate(row, col);
+// read goal [row,col] for agent i
+beg++;
+col = atoi((*beg).c_str());
+beg++;
+row = atoi((*beg).c_str());
+goal_human[i] = linearizeCoordinate(row, col);
+}
+}
+myfile.close();
+return true;
 }
 */
 void Instance::printAgents(AgentType type) const
