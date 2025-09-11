@@ -1270,6 +1270,7 @@ bool CBS::validateHumanPath(CBSNode& node)
     allPs.resize(num_of_agents);
     for (int i=0;i<num_of_agents;i++)
     {
+        //cout<<"generating mdd: "<< i<<endl;
         MDD *mdd1 = nullptr;
         mdd1 = mdd_helper.getMDD(node, i, paths[i]->size());
         Paths tmp=mdd1->getAllPaths(paths[i]->size());
@@ -1291,9 +1292,10 @@ bool CBS::validateHumanPath(CBSNode& node)
 
     while(1)
     {
+        //cout<<"stuck here"<<endl;
 
-    runtime = (double)(clock() - start) / CLOCKS_PER_SEC;
-    if (runtime > time_limit) return false;
+        runtime = (double)(clock() - start) / CLOCKS_PER_SEC;
+        if (runtime > time_limit) return false;
         //cout<<"===================================================================="<<endl;
         for (int i = 0; i < num_of_agents; i++) {
             Ps[i]=allPs[i][idx[i]];
@@ -1337,25 +1339,32 @@ bool CBS::validateHumanPath(CBSNode& node)
             return true;
         }
 
-    GOTO_SKIP:
+GOTO_SKIP:
+
+        runtime = (double)(clock() - start) / CLOCKS_PER_SEC;
+        //cout<<"run time: "<< runtime<<endl;
+        if (runtime > time_limit) return false;
+
         int i = num_of_agents - 1;
         while (i >= 0 && ++idx[i] == allPs[i].size()) {
             idx[i] = 0;
             i--;
         }
+
         //cout<<"idx: ";
         //for (int i = 0; i < num_of_agents; i++) {
         //  cout<<idx[i]<<", ";
         //}
         //cout<<endl;
 
+        //skipping incompatable single agent path
         for (int i=0;i<incompate.size();i++)
         {
             if (idx[incompate[i][0]]==incompate[i][1] && idx[incompate[i][2]]==incompate[i][3])
             {
-                // cout<<"skipped!!"<<endl;
+                //cout<<"skipped!!"<<endl;
                 //cout<<"incomp: "<<incompate[i][0]<<", "<<incompate[i][1]<<", "<<incompate[i][2]<<", "<<
-                //    incompate[i][3]<<endl;
+                //   incompate[i][3]<<endl;
                 int midx= incompate[i][0] > incompate[i][2] ? incompate[i][0] : incompate[i][2];
                 for (int j= midx+1; j<num_of_agents; j++)
                 {
@@ -1407,7 +1416,7 @@ bool CBS::validateHumanPath(const PathPool& Ps)
 }
 
 int CBS::checkTermination(HLNode* curr)
-//-1: timeout, 0: dont terminate, 1: found solution 2: found solution for robots
+    //-1: timeout, 0: dont terminate, 1: found solution 2: found solution for robots
 {
     if (!terminate(curr)) return 0;
     if (solution_found) return 1;
@@ -1415,13 +1424,13 @@ int CBS::checkTermination(HLNode* curr)
 
 
     /*
-    if (!solving_human)
-    {
-        if (solution_found) return 1;
-        else return -1;
-    }
+       if (!solving_human)
+       {
+       if (solution_found) return 1;
+       else return -1;
+       }
 
-    if (!solution_found) return 0; //solving human, but there is conflict within the robots
+       if (!solution_found) return 0; //solving human, but there is conflict within the robots
 
     //check whether there is a conflict to human
     bool flag=solveHuman();
@@ -1503,9 +1512,9 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
         else if (flag==1) {
             if (solving_human)
             {
-                cout<<"at leaf, validating human"<<endl<<fflush;
+                //cout<<"at leaf, validating human"<<endl<<fflush;
                 bool tempflag=validateHumanPath(*curr);
-                cout<<"out of validating human"<<endl<<fflush;
+                //cout<<"out of validating human"<<endl<<fflush;
 
                 if (tempflag)
                 {
@@ -1561,6 +1570,7 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound, 
                 if (solving_human)
                 {
                     //cout<<"at leaf, validating human"<<endl<<fflush;
+                    //cout<<"checking human Path in by pass"<<endl;
                     if (validateHumanPath(*curr))
                     {
                         goal_node=curr;
@@ -1715,7 +1725,7 @@ bool CBS::terminate(HLNode* curr)
     if (curr->conflicts.empty() && curr->unknownConf.empty()) //no conflicts
     {// found a solution
         solution_found = true;
-         goal_node = dynamic_cast<CBSNode*> (curr);
+        goal_node = dynamic_cast<CBSNode*> (curr);
         solution_cost = curr->getFHatVal() - curr->cost_to_go;
         if (!validateSolution())
         {
