@@ -9,6 +9,14 @@ def send(payload):
     else:
         print(f"Failed to send message: {response.status_code} - {response.text}")
 
+def sendStart():
+    print("starting Experiement")
+    payload = {
+    #"payload_json": '{"content":"BUG!!!!!!!!!!!!!!!!! FUCK YOU!!!!!!!!!"}'
+    "content":"------------------Starting a New Experiment---------------------"
+    }
+    send(payload)
+
 def sendError():
     print("error")
     payload = {
@@ -48,7 +56,7 @@ def remove_first_line(input_file, output_file):
 #data=remove_first_line('./input.txt', './errors.txt')
 with open(sys.argv[1],"r") as f:
     CMDPOOL=[l for l in f]
-
+sendStart()
 for data in CMDPOOL:
     cmd=data.strip().split(" ")
     print(subprocess.list2cmdline(cmd))
