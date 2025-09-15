@@ -1270,18 +1270,18 @@ bool CBS::validateHumanPath(CBSNode& node)
     allPs.resize(num_of_agents);
     for (int i=0;i<num_of_agents;i++)
     {
-        //cout<<"generating mdd: "<< i<<endl;
+        cout<<"generating mdd: "<< i<<endl;
         MDD *mdd1 = nullptr;
         mdd1 = mdd_helper.getMDD(node, i, paths[i]->size());
         Paths tmp=mdd1->getAllPaths(paths[i]->size());
         allPs[i]=PathPool(tmp.begin(), tmp.end());
-        //cout<<"mdd path:"<<endl;
+        cout<<"mdd path:"<<endl;
         for (int j=0;j<allPs[i].size();j++)
             allPs[i][j].insert(allPs[i][j].begin(),*(paths_found_initially[i].begin()));
-        //for (auto p:allPs[i])
-        //{
-        //    cout<<p;
-        //}
+        for (auto p:allPs[i])
+        {
+            cout<<p;
+        }
     }
 
     //from paths to all permutations
@@ -1292,7 +1292,7 @@ bool CBS::validateHumanPath(CBSNode& node)
 
     while(1)
     {
-        //cout<<"stuck here"<<endl;
+        cout<<"stuck here"<<endl;
 
         runtime = (double)(clock() - start) / CLOCKS_PER_SEC;
         if (runtime > time_limit) return false;
@@ -1351,18 +1351,18 @@ GOTO_SKIP:
             i--;
         }
 
-        //cout<<"idx: ";
-        //for (int i = 0; i < num_of_agents; i++) {
-        //  cout<<idx[i]<<", ";
-        //}
-        //cout<<endl;
+        cout<<"idx: ";
+        for (int i = 0; i < num_of_agents; i++) {
+          cout<<idx[i]<<", ";
+        }
+        cout<<endl;
 
         //skipping incompatable single agent path
         for (int i=0;i<incompate.size();i++)
         {
             if (idx[incompate[i][0]]==incompate[i][1] && idx[incompate[i][2]]==incompate[i][3])
             {
-                //cout<<"skipped!!"<<endl;
+                cout<<"skipped!!"<<endl;
                 //cout<<"incomp: "<<incompate[i][0]<<", "<<incompate[i][1]<<", "<<incompate[i][2]<<", "<<
                 //   incompate[i][3]<<endl;
                 int midx= incompate[i][0] > incompate[i][2] ? incompate[i][0] : incompate[i][2];

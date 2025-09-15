@@ -13,9 +13,11 @@ for m in ["empty-8-8", "empty-16-16", "random-32-32-10", "warehouse-10-20-10-2-1
             with open(fn_ins) as f:
                 maxlen=len(f.read().strip().split("\n"))-1
 
+
             for r in range(10,min(101,maxlen)):
                 for init_method in ["OPTIMAL"]:
                     for merge_method in ["stop", "MCP","superMCP", "Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]:
+                        if merge_method=="OPTIMAL" and r>20: continue
                         fn_opt=fn_opt_temp+f"{BIGI}"+".opt"
                         BIGI+=1
                         cmd=[exe,"-m",fn_m,"-a",fn_ins,"-h", fn_human, "-r", r, "-t",60,
