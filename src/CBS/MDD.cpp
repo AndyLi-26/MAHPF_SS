@@ -163,7 +163,7 @@ Paths MDD::getAllPaths(int c) const
 
 void MDD::getAllPathsAux(const MDDNode* n, Path curP, list<Path>& allP, int c) const
 {
-    cout<<"getting path, size: "<<allP.size()<<endl;
+    //cout<<"getting path, size: "<<allP.size()<<endl;
     if ((n->children.empty() || curP.size()==c) && curP.back().location==solver->goal_location) {
         allP.push_back(curP);
         return;
