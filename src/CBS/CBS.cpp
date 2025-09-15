@@ -1274,6 +1274,8 @@ bool CBS::validateHumanPath(CBSNode& node)
         MDD *mdd1 = nullptr;
         mdd1 = mdd_helper.getMDD(node, i, paths[i]->size());
         Paths tmp=mdd1->getAllPaths(paths[i]->size());
+        runtime = (double)(clock() - start) / CLOCKS_PER_SEC;
+        if (runtime > time_limit) return false;
         allPs[i]=PathPool(tmp.begin(), tmp.end());
         //cout<<"mdd path:"<<endl;
         for (int j=0;j<allPs[i].size();j++)
