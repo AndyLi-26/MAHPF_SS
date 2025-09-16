@@ -17,7 +17,7 @@ for m in ["empty-8-8", "empty-16-16", "random-32-32-10", "warehouse-10-20-10-2-1
             for r in range(10,min(101,maxlen)):
                 for init_method in ["OPTIMAL"]:
                     #for merge_method in ["stop", "MCP","superMCP", "Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]:
-                    for merge_method in ["Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]:
+                    for merge_method in ["stop", "Sub-OPTIMAL-P1","Sub-OPTIMAL"]:
                         if merge_method=="OPTIMAL" and r>20: continue
                         fn_opt=fn_opt_temp+f"{BIGI}"+".opt"
                         BIGI+=1

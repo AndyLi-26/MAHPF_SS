@@ -56,7 +56,10 @@ def remove_first_line(input_file, output_file):
 #data=remove_first_line('./input.txt', './errors.txt')
 with open(sys.argv[1],"r") as f:
     CMDPOOL=[l for l in f]
+
+errors=[]
 sendStart()
+
 for data in CMDPOOL:
     cmd=data.strip().split(" ")
     print(subprocess.list2cmdline(cmd))
@@ -75,8 +78,9 @@ for data in CMDPOOL:
                         print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                         print(processPool[p].args)
                         print(processPool[p].stderr)
-                        with open("errors.txt",'a') as f:
-                            print(' '.join(processPool[p].args),file=f)
+                        errors.append(' '.join(processPool[p].args))
+                        #with open("errors.txt",'a') as f:
+                        #    print(' '.join(processPool[p].args),file=f)
                     processPool.pop(p)
                     finish = True
                     p-=1
@@ -93,8 +97,9 @@ for data in CMDPOOL:
                         print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                         print(processPool[p])
                         print(processPool[p].args)
-                        with open("errors.txt",'a') as f:
-                            print(' '.join(processPool[p].args),file=f)
+                        errors.append(' '.join(processPool[p].args))
+                        #with open("errors.txt",'a') as f:
+                        #    print(' '.join(processPool[p].args),file=f)
                     processPool.pop(p)
                     finish = True
                     p-=1
@@ -108,3 +113,5 @@ for data in CMDPOOL:
 
 
 sendFinish()
+with open("erros.txt",'w') as f:
+    [print(i) for i in errors]

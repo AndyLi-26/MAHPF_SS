@@ -1,3 +1,4 @@
+from os import wait
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import sys,random
@@ -79,7 +80,7 @@ def genMarkers(n):
 
 maps=["empty-8-8", "empty-16-16", "random-32-32-10", "warehouse-10-20-10-2-1"]
 #mergeAlgo=["stop", "superMCP","MCP","Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]
-mergeAlgo=["stop","Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]
+mergeAlgo=["Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]
 colormap=genColor(len(mergeAlgo))
 markers=genMarkers(len(mergeAlgo))
 
@@ -99,7 +100,8 @@ for mi,m in enumerate(maps):
 
     for idx in IDXS:
         tmp=filterItem(localL, lambda l: l[0:4]==list(idx))
-        #[print(i) for i in tmp]
+        [print(i) for i in tmp]
+        print("lens",len(tmp), len(mergeAlgo))
         assert len(tmp)==len(mergeAlgo)
 
         sanity=[9999999 for _ in mergeAlgo ]
@@ -111,6 +113,7 @@ for mi,m in enumerate(maps):
         print(idx)
         assert sanityCheck(sanity)
 
+        print(sanity)
         dif=findDif(sanity)
         if dif and dif>maxDIF:
             maxDIF=dif

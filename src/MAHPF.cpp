@@ -78,6 +78,7 @@ bool MAHPF::merge()
     if(merge_algo== "OPTIMAL")
     {
         cout<<"start merging with OPTIMAL"<<endl;
+        return false;
         if (!mergeOPTIMAL()) return false;
     }
     // to be implemented
