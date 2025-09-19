@@ -3,6 +3,18 @@ exe="../release/mahpf"
 fn_folder="../bench_mark/"
 fn_opt_temp="../exp/batch3/ID_"
 all=[]
+ml=["empty-16-16",
+"empty-32-32",
+"empty-48-48",
+"empty-8-8",
+"random-32-32-10",
+"random-32-32-20",
+"random-64-64-10",
+"random-64-64-20",
+"warehouse-10-20-10-2-1",
+"warehouse-10-20-10-2-2",
+"warehouse-20-40-10-2-1",
+"warehouse-20-40-10-2-2"]
 BIGI=0
 for m in ["empty-8-8", "empty-16-16", "random-32-32-10", "warehouse-10-20-10-2-1"]:
     fn_m= f"{fn_folder}{m}/map.map"
@@ -14,7 +26,7 @@ for m in ["empty-8-8", "empty-16-16", "random-32-32-10", "warehouse-10-20-10-2-1
                 maxlen=len(f.read().strip().split("\n"))-1
 
 
-            for r in range(10,min(101,maxlen)):
+            for r in range(100,min(400,maxlen)):
                 for init_method in ["OPTIMAL"]:
                     #for merge_method in ["stop", "MCP","superMCP", "Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]:
                     for merge_method in ["stop", "Sub-OPTIMAL-P1","Sub-OPTIMAL"]:

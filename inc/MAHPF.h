@@ -15,6 +15,8 @@ class MAHPF
         Stats init_sol;
         Stats final_sol;
         int cur_Soc;
+        int init_h;
+        int final_h;
         bool backEdge;
 
         void logStats(int n);

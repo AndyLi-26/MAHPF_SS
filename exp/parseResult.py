@@ -33,6 +33,22 @@ with open(sys.argv[1]) as f:
 
 print("total ins: ",len(motherload))
 withConf=filterItem(motherload,lambda l: l[8]!=0)
+print(f"{len(withConf)} has intial conflict")
+
+def getMAP(L):
+    maplist=[]
+    for i in L:
+        temp=i[0].replace("/map.map","").split("/")[-1]
+        if not temp in maplist: maplist.append(temp)
+    return maplist
+
+def getAlgo(L):
+    algoList=[]
+    for i in L:
+        #[print(idx,content) for idx,content in enumerate(i)]
+        temp=i[9]
+        if not temp in algoList: algoList.append(temp)
+    return algoList
 '''
 print("with init conf",len(withConf))
 mergeFail=filterItem(withConf,lambda l: l[-2]==-1)
@@ -65,7 +81,6 @@ def findDif(l):
         return l[3]-l[-1]
     return None
 
-
 def genColor(n):
     colormap=cm.get_cmap("gist_rainbow",n)
     temp=[colormap(i) for i in range(n)]
@@ -78,9 +93,16 @@ def genMarkers(n):
     return marker_styles[:n]
 
 
-maps=["empty-8-8", "empty-16-16", "random-32-32-10", "warehouse-10-20-10-2-1"]
+maps=getMAP(motherload)
+mergeAlgo=getAlgo(motherload)
+
+print(f"all maps has: {maps}")
+print(f"all algo has: {mergeAlgo}")
+
+
+#["empty-8-8", "empty-16-16", "random-32-32-10", "warehouse-10-20-10-2-1"]
 #mergeAlgo=["stop", "superMCP","MCP","Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]
-mergeAlgo=["Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]
+#mergeAlgo=["Sub-OPTIMAL-P1","Sub-OPTIMAL","OPTIMAL"]
 colormap=genColor(len(mergeAlgo))
 markers=genMarkers(len(mergeAlgo))
 
@@ -90,7 +112,7 @@ maxDIFID=-1
 for mi,m in enumerate(maps):
     #plt.subplot(1,4,mi+1)
     plt.figure()
-    localL = filterItem(withConf,lambda l: m in l[0])
+    localL = filterItem(motherload,lambda l: m in l[0])
     IDXS=grabInsIDX(localL)
     x=dict()
     for idx in IDXS:
@@ -100,8 +122,8 @@ for mi,m in enumerate(maps):
 
     for idx in IDXS:
         tmp=filterItem(localL, lambda l: l[0:4]==list(idx))
-        [print(i) for i in tmp]
-        print("lens",len(tmp), len(mergeAlgo))
+        #[print(i) for i in tmp]
+        #print("lens",len(tmp), len(mergeAlgo))
         assert len(tmp)==len(mergeAlgo)
 
         sanity=[9999999 for _ in mergeAlgo ]
@@ -110,11 +132,10 @@ for mi,m in enumerate(maps):
             if l[-1]:
                 sanity[i]=l[-1]
             x[idx[2]][i].append(l[-1])
-        print(idx)
-        assert sanityCheck(sanity)
 
-        print(sanity)
-        dif=findDif(sanity)
+        #assert sanityCheck(sanity)
+        #dif=findDif(sanity)
+        dif=max(sanity)-min(sanity)
         if dif and dif>maxDIF:
             maxDIF=dif
             maxDIFID=idx
@@ -135,13 +156,16 @@ for mi,m in enumerate(maps):
     for i in range(len(finaly)):
         plt.scatter(finalx[i],finaly[i],marker=markers[i],facecolors="none",edgecolors=colormap[i],label=mergeAlgo[i])
 
-    plt.xticks(x_idx)
+    print(x_idx)
+    #plt.xticks(x_idx)
     plt.title(m)
+    plt.xlabel("instances")
+    plt.ylabel("SoC")
     plt.legend()
-#plt.show()
-#plt.tight_layout()
+plt.tight_layout()
+plt.show()
 #plt.show()
 
 print(maxDIFID,maxDIF)
-temp=filterItem(withConf,byID(maxDIFID))
+temp=filterItem(motherload,byID(maxDIFID))
 [print(i) for i in temp]

@@ -30,6 +30,7 @@ bool MAHPF::getInitialSolution() {
         runHuman();
         cout<<"path after return"<<endl;
         cout<<humans[0].path<<endl;
+        init_h=humans[0].path.size();
 
         succ=runCBS(true);
         if (screen>0)
@@ -145,6 +146,7 @@ bool MAHPF::merge()
         }
     }
     //final_sol.Soc=humans[0].path.size();
+    final_h=humans[0].path.size();
     final_sol.Soc=0;
     for (Agent r:robots)
         final_sol.Soc+=r.path.size();
@@ -764,11 +766,13 @@ void MAHPF::logStats(int n)
 {
     if (n==0)
     {
+        cout<<"init human: "<<init_h<<endl;
         cout<<init_sol;
         cout<<"init time"<<run_time<<endl;
     }
     else if (n==1)
     {
+        cout<<"final human: "<<final_h<<endl;
         cout<<final_sol;
         cout<<"merge time"<<run_time<<endl;
     }
@@ -782,13 +786,12 @@ void MAHPF::logExpStats(const string& statsFn, const string& map, const string& 
     if (file.is_open()) {
         file<<map<<", "<<instance<<", "<<r<<", "<<h<<", "<<run_time
             <<", "<<initAlgo<<", "<<init_sol.makespan<<", "<<init_sol.Soc
-            <<", "<<init_conf
+            <<", "<<init_conf<<","<<init_h
             <<", "<<mergeAlgo<<", "<<final_sol.makespan<<", "<<final_sol.Soc
-            <<", "<<endl;
+            <<","<<init_h<<", "<<endl;
         file.close();     // Close the file
     } else {
         std::cerr << "Error: Could not open file for appending." << std::endl;
     }
-
 }
 
