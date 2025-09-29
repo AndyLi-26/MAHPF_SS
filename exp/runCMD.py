@@ -113,5 +113,6 @@ for data in CMDPOOL:
 
 
 sendFinish()
-with open("erros.txt",'w') as f:
-    [print(i) for i in errors]
+if errors:
+    with open("erros.txt",'w') as f:
+        [print(i) for i in errors]
