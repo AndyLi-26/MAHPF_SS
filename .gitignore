@@ -8,3 +8,4 @@ debug*
 release*
 *.log
 *.html
+*.DS_Store
