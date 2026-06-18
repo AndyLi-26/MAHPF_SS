@@ -27,7 +27,7 @@ class AnimationGenerator:
         if PRT_PATH:
             self.draw_path()
         self.create_image()
-        self.inc=20
+        self.inc=100
 
         #print(len(self.agent))
         print(self.make_span)
