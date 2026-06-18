@@ -6,4 +6,5 @@ exp*
 debug
 debug*
 release*
-
+*.log
+*.html

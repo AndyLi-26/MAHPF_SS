@@ -25,3 +25,20 @@ target_link_libraries(mahpf ${Boost_LIBRARIES} Eigen3::Eigen)
 
 add_compile_options(-fsanitize=address)
 add_link_options(-fsanitize=address)
+
+
+
+
+
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
+
+if(ENABLE_ASAN)
+    include(${CMAKE_SOURCE_DIR}/asan.cmake)
+endif()
+
+option(ENABLE_UBSAN "Enable UBSanitizer" OFF)
+
+if(ENABLE_UBSAN)
+    include(${CMAKE_SOURCE_DIR}/ubsan.cmake)
+endif()
+
